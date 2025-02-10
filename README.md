@@ -31,3 +31,17 @@ Pre-commit is configured to use the following tools for checking and formatting 
 ### License
 
 mit
+# Custom Timesheet App for Frappe/ERPNext
+
+A custom timesheet management application built for Frappe/ERPNext.
+
+## Features
+- Weekly timesheet management
+- Task-based time entry
+- Holiday and weekend handling
+- Manager approval workflow
+- Automatic notifications
+
+## Installation
+bench get-app https://github.com/YOUR_USERNAME/custom_timesheet
+bench install-app custom_timesheet

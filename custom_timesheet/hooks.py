@@ -1,9 +1,35 @@
 app_name = "custom_timesheet"
 app_title = "Custom Timesheet"
-app_publisher = "kishore"
-app_description = "timesheet"
-app_email = "kishoregowda170@gmail.com"
-app_license = "mit"
+app_publisher = "Your Name"
+app_description = "Custom Timesheet Application"
+app_email = "your@email.com"
+app_license = "MIT"
+
+# Document Events
+doc_events = {
+    "Custom Timesheet": {
+        "validate": "custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.validate"
+    }
+}
+
+# DocTypes to be registered
+doctype_js = {
+    "Custom Timesheet": [
+        "public/js/timeSheetPopulate.js",
+        "custom_timesheet/doctype/custom_timesheet/custom_timesheet.js"
+    ]
+}
+
+# DocType List JS
+doctype_list_js = {
+    "Custom Timesheet": "custom_timesheet/doctype/custom_timesheet/custom_timesheet_list.js"
+}
+
+# Whitelisted methods
+whitelisted_methods = {
+    "custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.get_employee_info": True,
+    "custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.approve_timesheet": True
+}
 
 # Apps
 # ------------------
@@ -13,9 +39,6 @@ app_license = "mit"
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
 # 	{
-# 		"name": "custom_timesheet",
-# 		"logo": "/assets/custom_timesheet/logo.png",
-# 		"title": "Custom Timesheet",
 # 		"route": "/custom_timesheet",
 # 		"has_permission": "custom_timesheet.api.permission.has_app_permission"
 # 	}
@@ -120,13 +143,8 @@ app_license = "mit"
 # -----------
 # Permissions evaluated in scripted ways
 
-# permission_query_conditions = {
-# 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
-# }
-#
-# has_permission = {
-# 	"Event": "frappe.desk.doctype.event.event.has_permission",
-# }
+# Remove all permission checks
+has_permission = {}
 
 # DocType Class
 # ---------------
