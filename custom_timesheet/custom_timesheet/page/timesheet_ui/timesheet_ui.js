@@ -214,45 +214,51 @@ frappe.pages['timesheet-ui'].on_page_load = function(wrapper) {
 
             /* Dark mode styles */
             [data-theme="dark"] .timesheet-container {
-                background-color: var(--gray-900);
-                color: var(--gray-100);
+                background-color: var(--bg-color);
+                color: #ffffff;
             }
             [data-theme="dark"] .table {
-                color: var(--gray-100);
+                color: #ffffff;
             }
             [data-theme="dark"] .table-bordered td,
             [data-theme="dark"] .table-bordered th {
-                border-color: var(--gray-700);
+                border-color: #3e4959;
             }
-            [data-theme="dark"] .employee-info {
-                background-color: var(--gray-800);
-            }
-            [data-theme="dark"] .weekend {
-                background-color: var(--gray-800);
-            }
-            [data-theme="dark"] .comment-input {
-                border-top-color: var(--gray-700);
-            }
-            [data-theme="dark"] input.form-control {
-                color: var(--gray-100);
-            }
-            [data-theme="dark"] .text-muted {
-                color: var(--gray-400) !important;
-            }
-            [data-theme="dark"] .progress {
-                background-color: var(--gray-700);
+            [data-theme="dark"] .employee-info,
+            [data-theme="dark"] .weekend,
+            [data-theme="dark"] .timesheet-status,
+            [data-theme="dark"] .comment-display,
+            [data-theme="dark"] .task-input-container input {
+                background-color: var(--fg-color) !important;
             }
             [data-theme="dark"] .btn-default {
-                background-color: var(--gray-700);
-                color: var(--gray-100);
-                border-color: var(--gray-600);
+                background-color: var(--fg-color);
+                color: #ffffff;
+                border-color: #3e4959;
             }
             [data-theme="dark"] .btn-default:hover {
-                background-color: var(--gray-600);
+                background-color: var(--bg-color);
+            }
+            [data-theme="dark"] .comment-input {
+                border-top-color: #3e4959;
+                background-color: var(--fg-color);
+                color: #ffffff;
+            }
+            [data-theme="dark"] .text-muted {
+                color: rgba(255, 255, 255, 0.6) !important;
+            }
+            [data-theme="dark"] .progress {
+                background-color: var(--fg-color);
+            }
+            [data-theme="dark"] input.form-control {
+                color: #ffffff;
+                background-color: var(--fg-color) !important;
+            }
+            [data-theme="dark"] .indicator-separator {
+                background: #3e4959;
             }
             [data-theme="dark"] .task-input-container input {
-                background-color: var(--gray-800) !important;
-                border-color: var (--gray-700) !important;
+                border-color: #3e4959 !important;
             }
             .weekend .text-muted {
                 padding: 6px 0;
@@ -1317,45 +1323,51 @@ function initializeTimesheet(page, content, initialDate) {
 
             /* Dark mode styles */
             [data-theme="dark"] .timesheet-container {
-                background-color: var(--gray-900);
-                color: var(--gray-100);
+                background-color: var(--bg-color);
+                color: #ffffff;
             }
             [data-theme="dark"] .table {
-                color: var(--gray-100);
+                color: #ffffff;
             }
             [data-theme="dark"] .table-bordered td,
             [data-theme="dark"] .table-bordered th {
-                border-color: var(--gray-700);
+                border-color: #3e4959;
             }
-            [data-theme="dark"] .employee-info {
-                background-color: var(--gray-800);
-            }
-            [data-theme="dark"] .weekend {
-                background-color: var(--gray-800);
-            }
-            [data-theme="dark"] .comment-input {
-                border-top-color: var (--gray-700);
-            }
-            [data-theme="dark"] input.form-control {
-                color: var (--gray-100);
-            }
-            [data-theme="dark"] .text-muted {
-                color: var (--gray-400) !important;
-            }
-            [data-theme="dark"] .progress {
-                background-color: var (--gray-700);
+            [data-theme="dark"] .employee-info,
+            [data-theme="dark"] .weekend,
+            [data-theme="dark"] .timesheet-status,
+            [data-theme="dark"] .comment-display,
+            [data-theme="dark"] .task-input-container input {
+                background-color: var(--fg-color) !important;
             }
             [data-theme="dark"] .btn-default {
-                background-color: var (--gray-700);
-                color: var (--gray-100);
-                border-color: var (--gray-600);
+                background-color: var(--fg-color);
+                color: #ffffff;
+                border-color: #3e4959;
             }
             [data-theme="dark"] .btn-default:hover {
-                background-color: var (--gray-600);
+                background-color: var(--bg-color);
+            }
+            [data-theme="dark"] .comment-input {
+                border-top-color: #3e4959;
+                background-color: var(--fg-color);
+                color: #ffffff;
+            }
+            [data-theme="dark"] .text-muted {
+                color: rgba(255, 255, 255, 0.6) !important;
+            }
+            [data-theme="dark"] .progress {
+                background-color: var(--fg-color);
+            }
+            [data-theme="dark"] input.form-control {
+                color: #ffffff;
+                background-color: var(--fg-color) !important;
+            }
+            [data-theme="dark"] .indicator-separator {
+                background: #3e4959;
             }
             [data-theme="dark"] .task-input-container input {
-                background-color: var (--gray-800) !important;
-                border-color: var (--gray-700) !important;
+                border-color: #3e4959 !important;
             }
         `)
         .appendTo('head');

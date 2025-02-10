@@ -1,34 +1,26 @@
 [data-theme="light"] {
-	/* --bg-color: #d9e6f3; */
-	/* --bg-color: #fdf5f5; */
     --bg-color: #c1e5f5;
-
-    /* --bg-color:#87cfef; */
-
-	/* --fg-color: var(--bg-color); */
-    --fg-color:white;
-
-	--subtle-accent: var(--gray-50);
-	--subtle-fg: var(--gray-100);
-
-	/* --navbar-bg: #76618b; */
-	/* --navbar-bg:white; */
-    /* --navbar-bg: #1F2937; */
-    --navbar-bg:#226b92  ;
-
-	--fg-hover-color: var(--gray-100);
-	/* --card-bg: var(--bg-color); */
-    --card-bg:var(--fg-color);
-	--disabled-text-color: var(--gray-600);
-	--disabled-control-bg: var(--gray-50);
-	--control-bg: var(--gray-100);
-	--control-bg-on-gray: var(--gray-200);
-	--awesomebar-focus-bg: var(--fg-color);
-	--modal-bg: var(--fg-color);
-	--toast-bg: var(--modal-bg);
-	--popover-bg: white;
-
-	--awesomplete-hover-bg: var(--control-bg);
+    --fg-color: white;
+    --navbar-bg: #226b92;
+    --card-bg: var(--fg-color);
+    --border-color: rgba(34, 107, 146, 0.2);
+    --input-border: rgba(34, 107, 146, 0.3);
+    
+    /* Core theme variables */
+    --subtle-accent: #e8f4f8;
+    --subtle-fg: #f0f7fa;
+    --fg-hover-color: #e8f4f8;
+    --disabled-text-color: #607d8b;
+    --disabled-control-bg: #e8f4f8;
+    --control-bg: #f0f7fa;
+    --control-bg-on-gray: #e8f4f8;
+    
+    /* Background colors */
+    --awesomebar-focus-bg: var(--fg-color);
+    --modal-bg: var(--fg-color);
+    --toast-bg: var(--modal-bg);
+    --popover-bg: white;
+    --awesomplete-hover-bg: var(--subtle-accent);
 }
 
 [data-theme="dark"]{
@@ -92,6 +84,7 @@ button, select {
 
 .widget.onboarding-widget-box {
 	background-color: var(--fg-color);
+    border: 1px solid var(--border-color);
 }
 
 /* Side bar */
@@ -240,4 +233,38 @@ body[data-path="login"] .navbar-container,
         margin-left: 0;
         padding: 1rem;
     }
+}
+
+/* Enhanced borders and shadows */
+.card {
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 6px rgba(34, 107, 146, 0.08);
+}
+
+.input-group,
+.form-control {
+    border-color: var(--input-border);
+}
+
+.table-bordered th,
+.table-bordered td {
+    border-color: var(--border-color) !important;
+}
+
+/* Improved button styles */
+.btn-default {
+    border: 1px solid var(--border-color);
+    background-color: var(--fg-color);
+    color: var(--navbar-bg);
+}
+
+.btn-default:hover {
+    background-color: var(--subtle-accent);
+    border-color: var(--navbar-bg);
+}
+
+/* Enhanced dropdown styles */
+.dropdown-menu {
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 12px rgba(34, 107, 146, 0.15);
 }
