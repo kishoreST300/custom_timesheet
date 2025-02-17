@@ -1,0 +1,270 @@
+[data-theme="light"] {
+    --bg-color: #c1e5f5;
+    --fg-color: white;
+    --navbar-bg: #226b92;
+    --card-bg: var(--fg-color);
+    --border-color: rgba(34, 107, 146, 0.2);
+    --input-border: rgba(34, 107, 146, 0.3);
+    
+    /* Core theme variables */
+    --subtle-accent: #e8f4f8;
+    --subtle-fg: #f0f7fa;
+    --fg-hover-color: #e8f4f8;
+    --disabled-text-color: #607d8b;
+    --disabled-control-bg: #e8f4f8;
+    --control-bg: #f0f7fa;
+    --control-bg-on-gray: #e8f4f8;
+    
+    /* Background colors */
+    --awesomebar-focus-bg: var(--fg-color);
+    --modal-bg: var(--fg-color);
+    --toast-bg: var(--modal-bg);
+    --popover-bg: white;
+    --awesomplete-hover-bg: var(--subtle-accent);
+}
+
+[data-theme="dark"]{
+	--bg-color:#2f394c;
+	--fg-color:#1b2531;
+	--navbar-bg:#1b2531;
+	--card-bg:#2f394c;
+}
+
+/* navigation bar */
+.navbar{
+	height: 65px;
+	background: var(--navbar-bg);
+	box-shadow: 0px 0px 20px #000000a6	;
+}
+
+/* toggle for home page */
+[data-page-route=Workspaces] .layout-main .layout-main-section {
+    /* margin-left: -384px;
+    margin-right: -384px; */
+    background-color:var(--bg-color);
+}
+/* sub-headings */
+.ce-block b{
+    color: black;
+}
+
+/* navigation bar end buttons  */
+button, select {
+    color: white;
+}
+
+#navbar-breadcrumbs a{
+    color: white;
+}
+
+.es-icon{
+    fill: #9f9f9f;
+}
+
+/* Drop down */
+.awesomplete > [role=listbox]{
+    background-color: var(--fg-color);
+}
+
+/* Search bar background */
+.search-bar .awesomplete ul{
+    background-color: var(--fg-color);
+}
+
+.navbar-brand img {
+	display: inline-block;
+	/* max-width: 150px;
+	max-height: 22px; */
+}
+
+.navbar-home img {
+	width: 190px;
+    max-height: 44px;
+}
+
+.widget.onboarding-widget-box {
+	background-color: var(--fg-color);
+    border: 1px solid var(--border-color);
+}
+
+/* Side bar */
+/* .layout-side-section{
+	box-shadow: 0 2px 20px #00000000;
+    background: var(--fg-color);
+} */
+
+.body-sidebar{
+    box-shadow: 0 2px 20px #00000000;
+    /* background: var(--bg-color); */
+    background-color: var(--bg-color);
+}
+
+.page-form{
+    background-color: var(--bg-color);
+}
+.search-bar .awesomplete input{
+	font-weight: 600;
+}
+
+body[data-path="login"] .navbar.navbar-light.navbar-expand-lg,
+#page-login .navbar.navbar-light.navbar-expand-lg {
+    display: none !important;
+}
+
+/* Hide any other navbar related elements */
+body[data-path="login"] .navbar-container,
+#page-login .navbar-container {
+    display: none !important;
+}
+
+#page-login {
+    display: flex;
+    min-height: 100vh;
+    position: relative;
+	margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+/* Left side - Image container */
+#page-login::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 75%; /* Takes up 70% of the width */
+    height: 100%;
+    background: url('/assets/custom_timesheet/images/Sakshath_login-BG.JPG') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+/* Right side - Login form container */
+#page-login .page-content-wrapper {
+    position: relative;
+    width: 25%; /* Takes up 30% of the width */
+    /* min-height: 100vh; */
+	margin-top: 0 !important;
+    height: 100vh;
+
+    margin-left: 75%; /* Aligns with the image split */
+    background: var(--bg-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+/* Login form styles */
+#page-login .login-content.page-card {
+    background-color: transparent;
+    max-width: 100%;
+    padding: 0px;
+    border: none;
+    box-shadow: none;
+}
+
+/* Header styles */
+#page-login .page-card-head {
+    text-align: center;
+    padding: 0 0 20px 0;
+}
+
+#page-login .page-card-head img {
+    max-height: 60px;
+}
+
+/* Form field styles */
+#page-login .input-group {
+    margin-bottom: 1rem;
+}
+
+/* Hide footer */
+#page-login .page-footer {
+    display: none;
+}
+
+/* Hide other sections */
+#page-login .for-signup,
+#page-login .for-forgot,
+#page-login .for-login-with-email-link {
+    display: none;
+}
+
+.page_content {
+    margin: -48px;
+    min-height: 50vh;
+}
+/* 
+ #page-login .for-login .page-card .page-card-body .email-field input, 
+.for-login .page-card .page-card-body .password-field input, 
+.for-forgot .page-card .page-card-body .email-field input, 
+.for-forgot .page-card .page-card-body .password-field input, 
+.for-login-with-email-link .page-card .page-card-body .email-field input, 
+.for-login-with-email-link .page-card .page-card-body .password-field input, 
+.for-signup .page-card .page-card-body .email-field input, 
+.for-signup .page-card .page-card-body .password-field input, 
+.for-email-login .page-card .page-card-body .email-field input, 
+.for-email-login .page-card .page-card-body .password-field input {
+	padding-left: 33px;
+    width: 277px;
+}
+
+#page-login .for-login .page-card .page-card-body .forgot-password-message > *, 
+.for-forgot .page-card .page-card-body .forgot-password-message > *, 
+.for-login-with-email-link .page-card .page-card-body .forgot-password-message > *, 
+.for-signup .page-card .page-card-body .forgot-password-message > *, 
+.for-email-login .page-card .page-card-body .forgot-password-message > * {
+	padding: 4px;
+}
+
+.btn:not(.btn-md):not(.btn-lg){
+	width: 273px;
+} */
+
+/* Mobile responsiveness */
+@media (max-width: 720px) {
+    #page-login::before {
+        width: 0; /* Hide image on mobile */
+    }
+    
+    #page-login .page-content-wrapper {
+        width: 100%;
+        margin-left: 0;
+        padding: 1rem;
+    }
+}
+
+/* Enhanced borders and shadows */
+.card {
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 6px rgba(34, 107, 146, 0.08);
+}
+
+.input-group,
+.form-control {
+    border-color: var(--input-border);
+}
+
+.table-bordered th,
+.table-bordered td {
+    border-color: var(--border-color) !important;
+}
+
+/* Improved button styles */
+.btn-default {
+    border: 1px solid var(--border-color);
+    background-color: var(--fg-color);
+    color: var(--navbar-bg);
+}
+
+.btn-default:hover {
+    background-color: var(--subtle-accent);
+    border-color: var(--navbar-bg);
+}
+
+/* Enhanced dropdown styles */
+.dropdown-menu {
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 12px rgba(34, 107, 146, 0.15);
+}

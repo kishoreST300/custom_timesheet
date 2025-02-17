@@ -1,0 +1,275 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "hash",
+ "creation": "2025-01-31 11:15:34.178243",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "manager_name",
+  "selected_date",
+  "week_start",
+  "week_end",
+  "daily_entries",
+  "total_hours",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1,
+   "ignore_user_permissions": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Employee Name",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "manager_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Manager Name",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.docstatus==0",
+   "fieldname": "selected_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Selected Date",
+   "read_only_depends_on": "eval:doc.docstatus==1",
+   "reqd": 1
+  },
+  {
+   "fieldname": "week_start",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Week Start Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "week_end",
+   "fieldtype": "Date",
+   "label": "Week End Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "daily_entries",
+   "fieldtype": "Table",
+   "label": "Daily Entries",
+   "options": "Timesheet Daily Entry"
+  },
+  {
+   "fieldname": "total_hours",
+   "fieldtype": "Float",
+   "label": "Total Hours",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Data",
+   "label": "Status",
+   "read_only": 1,
+   "default": "Draft",
+   "hidden": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Custom Timesheet",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "approval_details_section",
+   "fieldtype": "Section Break",
+   "label": "Approval Details",
+   "depends_on": "eval:doc.status=='Submitted' || doc.status=='Approved'",
+   "collapsible": 0
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "options": "Employee",
+   "read_only": 1,
+   "depends_on": "eval:doc.status=='Approved'"
+  },
+  {
+   "fieldname": "approved_by_name",
+   "fieldtype": "Data",
+   "label": "Approver Name",
+   "fetch_from": "approved_by.employee_name",
+   "read_only": 1,
+   "depends_on": "eval:doc.status=='Approved'"
+  },
+  {
+   "fieldname": "approved_on",
+   "fieldtype": "Datetime",
+   "label": "Approved On",
+   "read_only": 1,
+   "depends_on": "eval:doc.status=='Approved'"
+  },
+  {
+   "fieldname": "approval_comment",
+   "fieldtype": "Small Text",
+   "label": "Approval Comment",
+   "read_only": 1,
+   "depends_on": "eval:doc.status=='Approved'"
+  },
+  {
+   "fieldname": "workflow_state",
+   "fieldtype": "Select",
+   "label": "Workflow State",
+   "options": "Draft\nSubmitted\nApproved\nRejected",
+   "default": "Draft",
+   "allow_on_submit": 1,
+   "in_standard_filter": 1,
+   "in_preview": 1
+  },
+  {
+   "fieldname": "cancellation_details_section",
+   "fieldtype": "Section Break",
+   "label": "Cancellation Details",
+   "depends_on": "eval:doc.status=='Cancelled'",
+   "collapsible": 0
+  },
+  {
+   "fieldname": "cancelled_by",
+   "fieldtype": "Link",
+   "label": "Cancelled By",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cancelled_by_name",
+   "fieldtype": "Data",
+   "label": "Cancelled By Name",
+   "fetch_from": "cancelled_by.employee_name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cancelled_on",
+   "fieldtype": "Datetime",
+   "label": "Cancelled On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cancellation_comment",
+   "fieldtype": "Small Text",
+   "label": "Cancellation Comment",
+   "read_only": 1
+  }
+ ],
+ 
+
+ "unique_fields": ["employee,week_start"],
+ "track_seen": 1,
+ 
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-02-07 11:53:14.187039",
+ "modified_by": "Administrator",
+ "module": "Custom Timesheet",
+ "name": "Custom Timesheet",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "All",
+   "share": 1,
+   "submit": 1,
+   "write": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "read": 1,
+   "role": "Employee",
+   "if_owner": 1
+  },
+  {
+   "read": 1,
+   "role": "Employee",
+   "match_conditions": "{\"reports_to\": frappe.session.user}"
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [
+  {
+   "color": "Gray",
+   "title": "Draft"
+  },
+  {
+   "color": "Orange",
+   "title": "Submitted"
+  },
+  {
+   "color": "Green",
+   "title": "Approved"
+  },
+  {
+   "color": "Red",
+   "title": "Rejected"
+  }
+ ],
+ "list_views": [
+  {
+   "view": "List",
+   "label": "All Timesheets",
+   "show_title": 1
+  }
+ ],
+ "search_fields": "employee, employee_name, status, workflow_state",
+ "title_field": "employee_name",
+ "quick_entry": 0,
+ "track_changes": 1,
+ "track_views": 1,
+ "show_preview_popup": 1,
+ "list_columns": [
+  {
+   "fieldname": "employee_name",
+   "label": "Employee",
+   "width": "200"
+  },
+  {
+   "fieldname": "week_start",
+   "label": "Week Start",
+   "width": "100"
+  },
+  {
+   "fieldname": "total_hours",
+   "label": "Hours",
+   "width": "80"
+  },
+  {
+   "fieldname": "workflow_state",
+   "label": "Status",
+   "width": "100"
+  }
+ ]
+}
