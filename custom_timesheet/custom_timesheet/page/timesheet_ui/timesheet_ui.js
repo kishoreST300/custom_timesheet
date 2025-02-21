@@ -1,4 +1,4 @@
-frappe.pages['timesheet-ui'].on_page_load = function(wrapper) {
+frappe.pages['timesheet-ui'].on_page_load = function (wrapper) {
     // Declare currentDate at the top level so it's accessible everywhere
     let currentDate = moment();
     let holidays = {};
@@ -12,61 +12,6 @@ frappe.pages['timesheet-ui'].on_page_load = function(wrapper) {
 
     const isHoliday = (date) => {
         return holidays[date] !== undefined;
-    };
-
-    const updateTotals = () => {
-        let totalHours = 0;
-        let billableHours = 0;
-        let nonBillableHours = 0;
-        let timeOffHours = 0;
-
-        $('.timesheet-grid tr').each(function () {
-            let rowTotal = 0;
-            $(this).find('.day-hours').each(function () {
-                let hours = parseFloat($(this).val()) || 0;
-                let isTimeOff = $(this).closest('tr').find('.description').text().includes('Holiday') ||
-                    $(this).closest('tr').find('.description').text().includes('Week Off');
-                let isBillable = $(this).closest('tr').find('.task-input').val() !== '';
-
-                rowTotal += hours;
-                totalHours += hours;
-
-                if (isTimeOff) timeOffHours += hours;
-                else if (isBillable) billableHours += hours;
-                else nonBillableHours += hours;
-            });
-            $(this).find('.row-total').text(rowTotal.toFixed(2));
-        });
-
-        // Update summary section
-        $('.total-hours').text(totalHours.toFixed(2));
-        $('.billable-hours').text(billableHours.toFixed(2));
-        $('.non-billable-hours').text(nonBillableHours.toFixed(2));
-        $('.time-off-hours').text(timeOffHours.toFixed(2));
-
-        // Update progress bar with enhanced colors
-        let progressPercentage = (totalHours / 40) * 100;
-        let progressBar = $('.progress-bar');
-        progressBar.css('width', `${Math.min(progressPercentage, 100)}%`);
-
-        // Update progress bar color based on percentage
-        if (totalHours >= 40) {
-            progressBar.removeClass('bg-primary bg-warning bg-info')
-                .addClass('bg-success')
-                .css('background-color', '#28a745');
-        } else if (totalHours >= 32) { // 80% or more
-            progressBar.removeClass('bg-primary bg-success bg-info')
-                .addClass('bg-warning')
-                .css('background-color', '#ffc107');
-        } else if (totalHours >= 16) { // 40% or more
-            progressBar.removeClass('bg-warning bg-success bg-info')
-                .addClass('bg-primary')
-                .css('background-color', '#007bff');
-        } else { // less than 40%
-            progressBar.removeClass('bg-warning bg-success bg-primary')
-                .addClass('bg-info')
-                .css('background-color', '#17a2b8');
-        }
     };
 
     const renderTimesheet = () => {
@@ -93,7 +38,7 @@ frappe.pages['timesheet-ui'].on_page_load = function(wrapper) {
 
         // Load initial data immediately
         loadTimesheetData();
-        
+
         // Then fetch holidays and update
         fetchAndPopulateTimesheet();
     };
@@ -180,117 +125,118 @@ frappe.pages['timesheet-ui'].on_page_load = function(wrapper) {
 
     // Add custom styles
     $('<style>')
-        .prop('type', 'text/css')
-        .html(`
-            .timesheet-container { padding: 20px; }
-            .project-cell { padding: 8px; }
-            .project-actions { margin-top: 8px; }
-            .table input.form-control { border: none; background: transparent; }
-            .totals-row { background-color: #f8f9fa; }
-            .progress { background-color: #e9ecef; }
-            .weekend { background-color: #f8f9fa; }
-            .delete-row { padding: 2px 5px; }
-            .delete-row:hover { background-color: #dc3545; color: white; }
-            .day-cell { display: flex; flex-direction: column; }
-            .comment-input { 
-                margin-top: 5px; 
-                font-size: 12px; 
-                padding: 2px 5px;
-                border-top: 1px solid #eee;
-             }
-            .task-selector-container { padding: 10px 0; }
-            .task-name { display: flex; justify-content: space-between; align-items: center; }
-            .delete-row { visibility: visible !important; }
-            .employee-info {
-                background-color: #f8f9fa;
-                padding: 15px;
-                border-radius: 4px;
-                margin-bottom: 15px;
-            }
-            .employee-info label {
-                font-size: 12px;
-                margin-bottom: 2px;
-            }
+    .prop('type', 'text/css')
+    .html(`
+        .timesheet-container { padding: 20px; }
+        .project-cell { padding: 8px; }
+        .project-actions { margin-top: 8px; }
+        .table input.form-control { border: none; background: transparent; }
+        .totals-row { background-color: #f8f9fa; }
+        .progress { background-color: #e9ecef; }
+        .weekend { background-color: #f8f9fa; }
+        .day-cell { display: flex; flex-direction: column; }
+        .comment-input { 
+            margin-top: 5px; 
+            font-size: 12px; 
+            padding: 2px 5px;
+            border-top: 1px solid #eee;
+        }
+        .task-selector-container { padding: 10px 0; }
+        .task-name { display: flex; justify-content: space-between; align-items: center; }
+        .employee-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .employee-info label {
+            font-size: 12px;
+            margin-bottom: 2px;
+        }
 
-            /* Dark mode styles */
-            [data-theme="dark"] .timesheet-container {
-                background-color: var(--bg-color);
-                color: #ffffff;
-            }
-            [data-theme="dark"] .table {
-                color: #ffffff;
-            }
-            [data-theme="dark"] .table-bordered td,
-            [data-theme="dark"] .table-bordered th {
-                border-color: #3e4959;
-            }
-            [data-theme="dark"] .employee-info,
-            [data-theme="dark"] .weekend,
-            [data-theme="dark"] .timesheet-status,
-            [data-theme="dark"] .comment-display,
-            [data-theme="dark"] .task-input-container input {
-                background-color: var(--fg-color) !important;
-            }
-            [data-theme="dark"] .btn-default {
-                background-color: var(--fg-color);
-                color: #ffffff;
-                border-color: #3e4959;
-            }
-            [data-theme="dark"] .btn-default:hover {
-                background-color: var(--bg-color);
-            }
-            [data-theme="dark"] .comment-input {
-                border-top-color: #3e4959;
-                background-color: var(--fg-color);
-                color: #ffffff;
-            }
-            [data-theme="dark"] .text-muted {
-                color: rgba(255, 255, 255, 0.6) !important;
-            }
-            [data-theme="dark"] .progress {
-                background-color: var(--fg-color);
-            }
-            [data-theme="dark"] input.form-control {
-                color: #ffffff;
-                background-color: var(--fg-color) !important;
-            }
-            [data-theme="dark"] .indicator-separator {
-                background: #3e4959;
-            }
-            [data-theme="dark"] .task-input-container input {
-                border-color: #3e4959 !important;
-            }
-            .weekend .text-muted {
-                padding: 6px 0;
-                font-size: 0.9em;
-            }
-            [data-theme="dark"] .weekend .text-muted {
-                color: var(--gray-500) !important;
-            }
-            .holiday-text {
-                padding: 8px 0;
-                font-weight: 500;
-            }
-            [data-theme="dark"] .holiday-text {
-                color: var(--gray-400) !important;
-            }
-            .progress-bar {
-                transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out;
-            }
-            [data-theme="dark"] .progress-bar.bg-success {
-                background-color: #2ecc71 !important;
-            }
-            [data-theme="dark"] .progress-bar.bg-warning {
-                background-color: #f1c40f !important;
-            }
-            [data-theme="dark"] .progress-bar.bg-primary {
-                background-color: #3498db !important;
-            }
-            [data-theme="dark"] .progress-bar.bg-info {
-                background-color: #00bcd4 !important;
-            }
-        `)
-        .appendTo('head');
+        /* Dark mode styles */
+        [data-theme="dark"] .timesheet-container {
+            background-color: var(--bg-color);
+            color: #ffffff;
+        }
+        [data-theme="dark"] .table {
+            color: #ffffff;
+        }
+        [data-theme="dark"] .table-bordered td,
+        [data-theme="dark"] .table-bordered th {
+            border-color: #3e4959;
+        }
+        [data-theme="dark"] .employee-info,
+        [data-theme="dark"] .weekend,
+        [data-theme="dark"] .timesheet-status,
+        [data-theme="dark"] .comment-display,
+        [data-theme="dark"] .task-input-container input {
+            background-color: var(--fg-color) !important;
+        }
+        [data-theme="dark"] .btn-default {
+            background-color: var(--fg-color);
+            color: #ffffff;
+            border-color: #3e4959;
+        }
+        [data-theme="dark"] .btn-default:hover {
+            background-color: var(--bg-color);
+        }
+        [data-theme="dark"] .comment-input {
+            border-top-color: #3e4959;
+            background-color: var(--fg-color);
+            color: #ffffff;
+        }
+        [data-theme="dark"] .text-muted {
+            color: rgba(255, 255, 255, 0.6) !important;
+        }
+        [data-theme="dark"] .progress {
+            background-color: var(--fg-color);
+        }
+        [data-theme="dark"] input.form-control {
+            color: #ffffff;
+            background-color: var(--fg-color) !important;
+        }
+        [data-theme="dark"] .indicator-separator {
+            background: #3e4959;
+        }
+        [data-theme="dark"] .task-input-container input {
+            border-color: #3e4959 !important;
+        }
+
+        /* Additional Styles */
+        .weekend .text-muted {
+            padding: 6px 0;
+            font-size: 0.9em;
+        }
+        [data-theme="dark"] .weekend .text-muted {
+            color: var(--gray-500) !important;
+        }
+        .holiday-text {
+            padding: 8px 0;
+            font-weight: 500;
+        }
+        [data-theme="dark"] .holiday-text {
+            color: var(--gray-400) !important;
+        }
+        .progress-bar {
+            transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out;
+        }
+        [data-theme="dark"] .progress-bar.bg-success {
+            background-color: #2ecc71 !important;
+        }
+        [data-theme="dark"] .progress-bar.bg-warning {
+            background-color: #f1c40f !important;
+        }
+        [data-theme="dark"] .progress-bar.bg-primary {
+            background-color: #3498db !important;
+        }
+        [data-theme="dark"] .progress-bar.bg-info {
+            background-color: #00bcd4 !important;
+        }
+    `)
+    .appendTo('head');
+
+   
 
     // Store currentDate in a more accessible way
     window.timesheetApp = {
@@ -315,9 +261,9 @@ function initializeTimesheet(page, content, initialDate) {
         return [0, 6].includes(moment(date).day());
     };
 
-    const isHoliday = (date) => {
-        return holidays[date] !== undefined;
-    };
+    // const isHoliday = (date) => {
+    //     return holidays[date] !== undefined;
+    // };
 
     const updateTotals = () => {
         let totalHours = 0;
@@ -325,13 +271,18 @@ function initializeTimesheet(page, content, initialDate) {
         let nonBillableHours = 0;
         let timeOffHours = 0;
 
-        $('.timesheet-grid tr').each(function () {
+        $('.timesheet-grid tr').each(function() {
             let rowTotal = 0;
-            $(this).find('.day-hours').each(function () {
-                let hours = parseFloat($(this).val()) || 0;
-                let isTimeOff = $(this).closest('tr').find('.description').text().includes('Holiday') ||
-                    $(this).closest('tr').find('.description').text().includes('Week Off');
-                let isBillable = $(this).closest('tr').find('.task-input').val() !== '';
+            $(this).find('.day-hours').each(function() {
+                let $cell = $(this);
+                let date = $cell.data('date');
+                let isHolidayDay = holidays[date] && !is_weekend(moment(date));
+                let isWeekend = is_weekend(moment(date));
+                
+                // Just use the value that's already there, don't modify it
+                let hours = parseFloat($cell.val() || $cell.attr('value')) || 0;
+                let isTimeOff = isHolidayDay || isWeekend;
+                let isBillable = !isTimeOff && $(this).closest('tr').find('.task-input').val() !== '';
 
                 rowTotal += hours;
                 totalHours += hours;
@@ -385,52 +336,57 @@ function initializeTimesheet(page, content, initialDate) {
                         </div>
                     </div>
                 </td>
-                ${Array.from({length: 7}, (_, i) => {
-                    let dayDate = moment(entry.date).clone().startOf('isoWeek').add(i, 'days');
-                    let isDayHolidayOrWeekend = holidays[dayDate.format('YYYY-MM-DD')] || is_weekend(dayDate);
-                    let comment = isDayHolidayOrWeekend ? 
-                        (holidays[dayDate.format('YYYY-MM-DD')] || "Week Off") : '';
-                    let hours = isDayHolidayOrWeekend && !is_weekend(dayDate) ? 8 : 0;
-                    let dateStr = dayDate.format('YYYY-MM-DD');
-                    
-                    // Look for entry data in taskGroups if available
-                    if (entry.entries && entry.entries[dateStr]) {
-                        hours = entry.entries[dateStr].hours || hours;
-                        comment = entry.entries[dateStr].comment || comment;
-                    }
-                    
-                    return `
-                        <td class="${isDayHolidayOrWeekend ? 'weekend' : ''}">
+                ${Array.from({ length: 7 }, (_, i) => {
+            let dayDate = moment(entry.date).clone().startOf('isoWeek').add(i, 'days');
+            let dateStr = dayDate.format('YYYY-MM-DD');
+            let isDayHoliday = holidays[dateStr] && !is_weekend(dayDate);
+            let isWeekend = is_weekend(dayDate);
+
+            let comment = isDayHoliday ? holidays[dateStr] : (isWeekend ? "Week Off" : "");
+            
+            // Initialize hours to 0
+            let hours = 0;
+
+            // Only set hours if there are existing entries
+            if (entry.entries && entry.entries[dateStr]) {
+                hours = entry.entries[dateStr].hours || 0;
+            }
+
+            comment = entry.entries?.[dateStr]?.comment || comment;
+
+            return `
+                        <td class="${isDayHoliday || isWeekend ? 'weekend' : ''}">
                             <div class="day-cell">
-                                ${!isDayHolidayOrWeekend ? `
+                                ${isDayHoliday || isWeekend ? `
+                                    <div class="text-muted text-center holiday-text">${comment}</div>
+                                    <input type="hidden"
+                                        class="form-control text-center day-hours"
+                                        data-date="${dateStr}"
+                                        value="${hours}"
+                                        data-is-holiday="${isDayHoliday}"
+                                        readonly>
+                                ` : `
                                     <input type="number"
                                         class="form-control text-center day-hours"
                                         data-date="${dateStr}"
                                         value="${hours}"
-                                        min="0"
+                                        min="0"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
                                         max="24"
-                                        step="0.5">
+                                        step="1">
                                     <input type="text"
                                         class="form-control comment-input"
                                         placeholder="Add comment"
                                         value="${frappe.utils.escape_html(comment)}">
-                                ` : `
-                                    <div class="text-muted text-center holiday-text">${comment}</div>
-                                    ${!is_weekend(dayDate) ? `
-                                        <input type="hidden"
-                                            class="form-control text-center day-hours"
-                                            data-date="${dateStr}"
-                                            value="${hours}">
-                                    ` : ''}
                                 `}
                             </div>
                         </td>
                     `;
-                }).join('')}
+        }).join('')}
                 <td class="text-center row-total">0.00</td>
             </tr>
         `;
     };
+
 
     const fetchEmployeeInfo = () => {
         return frappe.call({
@@ -474,7 +430,7 @@ function initializeTimesheet(page, content, initialDate) {
                     }
                 }),
                 only_select: true, // Add this line to disable create
-                change: function() {
+                change: function () {
                     const taskId = this.get_value();
                     if (taskId) {
                         frappe.db.get_value('Task', taskId, ['subject', 'name'], (r) => {
@@ -567,7 +523,7 @@ function initializeTimesheet(page, content, initialDate) {
         // Add initial empty row
         let $tbody = $('#timesheet-entries');
         $tbody.empty();
-        
+
         let defaultRow = generateEntryRow({
             date: timesheetApp.currentDate.format('YYYY-MM-DD')
         });
@@ -583,34 +539,36 @@ function initializeTimesheet(page, content, initialDate) {
             frappe.throw(__('Employee record not found. Please contact HR.'));
             return;
         }
-        
+
         let weekStart = timesheetApp.currentDate.clone().startOf('isoWeek').format('YYYY-MM-DD');
         let entries = [];
-        
+
         // Collect entries from all visible rows
-        $('#timesheet-entries tr').not('.add-row-container').each(function() {
-            let $row = $(this);
-            let task = $row.find('.task-input-container .frappe-control input').val();
-            
-            if (!task) return; // Skip rows without tasks
-            
-            $row.find('.day-cell').each(function() {
+        $('.add-row').on('click', function () {
+            let newRow = $('#timesheet-entries tr').first().clone(); // Clone an existing row
+            newRow.find('input').val(''); // Clear inputs for new row
+        
+            newRow.find('.day-hours').each(function () {
                 let $cell = $(this);
-                let date = $cell.find('.day-hours').data('date');
-                let hours = parseFloat($cell.find('.day-hours').val() || $cell.find('.day-hours').attr('value')) || 0;
-                let comment = $cell.find('.comment-input').val() || '';
-                
-                // Only include entries with hours or comments
-                if (date && (hours > 0 || comment)) {
-                    entries.push({
-                        date: date,
-                        task: task,
-                        hours: hours,
-                        comment: comment
-                    });
+                let date = $cell.data('date');
+                let isHolidayDay = holidays[date] && !is_weekend(moment(date));
+        
+                // Set holiday hours only if this is the first row for that date
+                let existingRowsForDate = $('.timesheet-grid .day-hours').filter(function () {
+                    return $(this).data('date') === date;
+                });
+        
+                if (isHolidayDay && existingRowsForDate.length === 0) {
+                    $cell.val(8); // Set 8 hours only for the first holiday row
+                } else {
+                    $cell.val(''); // Keep empty for additional rows
                 }
             });
+        
+            $('#timesheet-entries').append(newRow);
+            updateTotals(); // Recalculate totals after adding row
         });
+        
 
         if (entries.length === 0) {
             frappe.throw(__('Please add at least one time entry'));
@@ -628,7 +586,7 @@ function initializeTimesheet(page, content, initialDate) {
             callback: (r) => {
                 if (r.message && r.message.status === "success") {
                     currentTimesheet = r.message.timesheet;
-                    
+
                     // Update UI with saved data
                     if (r.message.data && r.message.data.daily_entries) {
                         r.message.data.daily_entries.forEach(entry => {
@@ -639,9 +597,9 @@ function initializeTimesheet(page, content, initialDate) {
                             }
                         });
                     }
-                    
+
                     updateTotals();
-                    
+
                     frappe.show_alert({
                         message: __('Timesheet saved successfully'),
                         indicator: 'green'
@@ -688,10 +646,10 @@ function initializeTimesheet(page, content, initialDate) {
                                         message: __('Timesheet submitted successfully'),
                                         indicator: 'green'
                                     }, 3);
-                                    
+
                                     // Make all inputs readonly without reloading data
                                     makeTimesheetReadonly();
-                                    
+
                                     // Update status indicators and hide buttons
                                     updateStatusIndicators('Submitted');
                                     $('.btn-save').hide();
@@ -719,13 +677,13 @@ function initializeTimesheet(page, content, initialDate) {
         // Disable all inputs and make them readonly
         $('.timesheet-grid input, .timesheet-grid select').prop('readonly', true).prop('disabled', true);
         $('.timesheet-grid .task-input-container input').prop('disabled', true);
-        
+
         // Hide action buttons
         $('.btn-save, .add-row, .delete-row').hide();
         $('.btn-primary').hide();
-        
+
         // Convert comment inputs to text display when readonly
-        $('.comment-input').each(function() {
+        $('.comment-input').each(function () {
             const comment = $(this).val();
             if (comment) {
                 const $display = $(`
@@ -737,10 +695,10 @@ function initializeTimesheet(page, content, initialDate) {
                 $(this).hide();
             }
         });
-        
+
         // Add readonly visual indicators
         $('.timesheet-grid').addClass('readonly');
-        
+
         // Add readonly styles if not already added
         if (!$('#readonly-styles').length) {
             $('<style id="readonly-styles">')
@@ -787,41 +745,41 @@ function initializeTimesheet(page, content, initialDate) {
                 reqd: 1
             }
         ],
-        function(values) {
-            frappe.call({
-                method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.cancel_timesheet',
-                args: {
-                    timesheet_name: currentTimesheet,
-                    comment: values.comment
-                },
-                callback: function(r) {
-                    if (r.message && r.message.status === "success") {
-                        frappe.show_alert({
-                            message: __('Timesheet cancelled successfully'),
-                            indicator: 'red'
-                        }, 3);
-                        
-                        // Show cancellation info
-                        showCancellationInfo(r.message.timesheet);
-                        
-                        // Reload data
-                        loadTimesheetData();
-                    } else {
-                        frappe.msgprint(__(r.message?.message || 'Could not cancel timesheet'));
+            function (values) {
+                frappe.call({
+                    method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.cancel_timesheet',
+                    args: {
+                        timesheet_name: currentTimesheet,
+                        comment: values.comment
+                    },
+                    callback: function (r) {
+                        if (r.message && r.message.status === "success") {
+                            frappe.show_alert({
+                                message: __('Timesheet cancelled successfully'),
+                                indicator: 'red'
+                            }, 3);
+
+                            // Show cancellation info
+                            showCancellationInfo(r.message.timesheet);
+
+                            // Reload data
+                            loadTimesheetData();
+                        } else {
+                            frappe.msgprint(__(r.message?.message || 'Could not cancel timesheet'));
+                        }
                     }
-                }
-            });
-        },
-        __('Cancel Timesheet'),
-        __('Cancel')
+                });
+            },
+            __('Cancel Timesheet'),
+            __('Cancel')
         );
     };
 
     const showCancellationInfo = (timesheet) => {
         $('.cancellation-info').remove();
-        
+
         if (!timesheet || timesheet.status !== 'Cancelled') return;
-        
+
         let html = `
             <div class="cancellation-info alert alert-danger mb-3">
                 <div class="d-flex justify-content-between align-items-center">
@@ -836,7 +794,7 @@ function initializeTimesheet(page, content, initialDate) {
                 </div>
             </div>
         `;
-        
+
         $(html).insertAfter('.summary-section');
     };
 
@@ -846,7 +804,7 @@ function initializeTimesheet(page, content, initialDate) {
             method: "frappe.client.get_list",
             args: {
                 doctype: "Holiday",
-                parent:"Holiday List",
+                parent: "Holiday List",
                 filters: [
                     ["holiday_date", "between", [
                         timesheetApp.currentDate.clone().startOf('isoWeek').format('YYYY-MM-DD'),
@@ -855,14 +813,14 @@ function initializeTimesheet(page, content, initialDate) {
                 ],
                 fields: ["holiday_date", "description"]
             },
-            callback: function(response) {
+            callback: function (response) {
                 holidays = {};
                 if (response.message) {
                     response.message.forEach(holiday => {
                         holidays[holiday.holiday_date] = holiday.description;
                     });
                 }
-               
+
                 // Then fetch timesheet data
                 loadTimesheetData();
             }
@@ -871,17 +829,17 @@ function initializeTimesheet(page, content, initialDate) {
 
     const loadTimesheetData = () => {
         let weekStart = timesheetApp.currentDate.clone().startOf('isoWeek').format('YYYY-MM-DD');
-        
+
         // Reset state first
         resetTimesheetState();
-        
+
         frappe.call({
             method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.get_timesheet_for_week',
             args: {
                 employee: employeeInfo.name,
                 week_start: weekStart
             },
-            callback: function(r) {
+            callback: function (r) {
                 if (!r.message) return;
 
                 let $tbody = $('#timesheet-entries');
@@ -890,84 +848,80 @@ function initializeTimesheet(page, content, initialDate) {
                 // Clear existing content
                 $tbody.empty();
 
-                if (r.message.timesheet) {
-                    currentTimesheet = r.message.timesheet.name;
-                    let entries = r.message.timesheet.daily_entries || [];
-                    
-                    // Hide action buttons for regular employees
-                    if (!isManager(r.message.timesheet.employee)) {
-                        hideActionButtons();
-                    }
-                    
-                    // Show approval info only if approved
-                    if (r.message.timesheet.status === 'Approved') {
-                        showApprovalInfo(r.message.timesheet);
-                    }
-
-                    // Make all fields readonly if submitted or approved
-                    if (r.message.timesheet.docstatus === 1 || r.message.timesheet.status === 'Approved') {
-                        makeTimesheetReadonly();
-                    }
-
-                    // Show approve button for managers when timesheet is submitted
-                    if (isManager(r.message.timesheet.employee) && 
-                        r.message.timesheet.status === 'Submitted') {
-                        showApproveButton();
-                    }
-
-                    // Group entries by task and date for easier lookup
-                    let taskGroups = {};
-                    entries.forEach(entry => {
-                        if (!taskGroups[entry.task]) {
-                            taskGroups[entry.task] = {
-                                date: entry.date,
-                                task: entry.task,
-                                entries: {}
-                            };
-                        }
-                        taskGroups[entry.task].entries[entry.date] = {
-                            hours: entry.hours,
-                            comment: entry.description
-                        };
+                // Add default row if no timesheet exists
+                if (!r.message.timesheet) {
+                    let defaultRow = generateEntryRow({
+                        date: timesheetApp.currentDate.format('YYYY-MM-DD')
                     });
-
-                    // Generate rows with entry data
-                    Object.values(taskGroups).forEach(taskData => {
-                        let row = generateEntryRow(taskData);
-                        let $row = $(row);
-                        $tbody.append($row);
-
-                        let control = initializeTaskField($row);
-                        if (control) {
-                            frappe.after_ajax(() => {
-                                control.set_value(taskData.task);
-                                updateTotals();
-                            });
-                        }
-                    });
-
-                    // Make all fields readonly if submitted
-                    if (r.message.timesheet.docstatus === 1) {
-                        makeTimesheetReadonly();
-                    }
-
-                    updateTotals();
-                    updateStatusIndicators(r.message.timesheet.status);
-                    
-                    // Show approval info if approved
-                    if (r.message.timesheet.status === 'Approved') {
-                        showApprovalInfo(r.message.timesheet);
-                    }
-                } else {
-                    // Reset status indicators for new week
+                    $tbody.append(defaultRow);
+                    initializeTaskField($tbody.find('tr:first'));
+                    appendAddRowButton($tbody);
                     updateStatusIndicators('Draft');
-                    resetApprovalInfo();
+                    return;
                 }
 
-                // Add "Add Row" button only if not readonly and not submitted
-                if (!r.message.timesheet || r.message.timesheet.docstatus === 0) {
+                currentTimesheet = r.message.timesheet.name;
+                let entries = r.message.timesheet.daily_entries || [];
+
+                // Hide action buttons for regular employees
+                if (!isManager(r.message.timesheet.employee)) {
+                    hideActionButtons();
+                }
+
+                // Show approval info only if approved
+                if (r.message.timesheet.status === 'Approved') {
+                    showApprovalInfo(r.message.timesheet);
+                }
+
+                // Make all fields readonly if submitted or approved
+                if (r.message.timesheet.docstatus === 1 || r.message.timesheet.status === 'Approved') {
+                    makeTimesheetReadonly();
+                }
+
+                // Show approve button for managers when timesheet is submitted
+                if (isManager(r.message.timesheet.employee) &&
+                    r.message.timesheet.status === 'Submitted') {
+                    showApproveButton();
+                }
+
+                // Group entries by task and date for easier lookup
+                let taskGroups = {};
+                entries.forEach(entry => {
+                    if (!taskGroups[entry.task]) {
+                        taskGroups[entry.task] = {
+                            date: entry.date,
+                            task: entry.task,
+                            entries: {}
+                        };
+                    }
+                    taskGroups[entry.task].entries[entry.date] = {
+                        hours: entry.hours,
+                        comment: entry.description
+                    };
+                });
+
+                // Generate rows with entry data
+                Object.values(taskGroups).forEach(taskData => {
+                    let row = generateEntryRow(taskData);
+                    let $row = $(row);
+                    $tbody.append($row);
+
+                    let control = initializeTaskField($row);
+                    if (control) {
+                        frappe.after_ajax(() => {
+                            control.set_value(taskData.task);
+                            updateTotals();
+                        });
+                    }
+                });
+
+                // Add "Add Row" button if not submitted
+                if (r.message.timesheet.docstatus === 0) {
                     appendAddRowButton($tbody);
                 }
+
+                updateTotals();
+                updateStatusIndicators(r.message.timesheet.status);
 
                 // Update submit/cancel button based on status
                 if (r.message.timesheet.docstatus === 1) {
@@ -989,18 +943,18 @@ function initializeTimesheet(page, content, initialDate) {
         // Reset all state indicators
         $('.indicator-circle').removeClass('active');
         $('.indicator-circle.draft').addClass('active');
-        
+
         // Clear approval info
         resetApprovalInfo();
-        
+
         // Reset buttons
         $('.btn-save').show();
         $('.btn-primary').show().text('Submit').removeClass('btn-danger').addClass('btn-primary');
-        
+
         // Remove readonly state
         $('.timesheet-grid').removeClass('readonly');
         $('.timesheet-grid input, .timesheet-grid select').prop('readonly', false).prop('disabled', false);
-        
+
         // Reset currentTimesheet
         currentTimesheet = null;
     };
@@ -1042,7 +996,7 @@ function initializeTimesheet(page, content, initialDate) {
         let weekStart = timesheetApp.currentDate.clone().startOf('isoWeek');
         let weekEnd = timesheetApp.currentDate.clone().endOf('isoWeek');
         $('.date-range').text(`${weekStart.format('MMM DD')} - ${weekEnd.format('MMM DD, YYYY')}`);
-        
+
         // Update grid dates
         for (let i = 0; i < 7; i++) {
             let day = weekStart.clone().add(i, 'days');
@@ -1057,7 +1011,7 @@ function initializeTimesheet(page, content, initialDate) {
                 $header.removeClass('weekend');
             }
         }
-        
+
         // Reload timesheet data for the new date range
         fetchAndPopulateTimesheet();
     };
@@ -1091,7 +1045,7 @@ function initializeTimesheet(page, content, initialDate) {
 
     // Add initializeDatePicker function inside initializeTimesheet
     const initializeDatePicker = () => {
-        content.find('.calendar-btn').on('click', function() {
+        content.find('.calendar-btn').on('click', function () {
             let dialog = new frappe.ui.Dialog({
                 title: __('Select Week'),
                 fields: [
@@ -1100,11 +1054,11 @@ function initializeTimesheet(page, content, initialDate) {
                         fieldtype: 'Date',
                         label: __('Select Date'),
                         default: timesheetApp.currentDate.format('YYYY-MM-DD'),
-                        onchange: function() {
+                        onchange: function () {
                             let date = dialog.get_value('selected_date');
                             let weekStart = moment(date).startOf('isoWeek');
                             let weekEnd = moment(date).endOf('isoWeek');
-                            dialog.set_value('week_range', 
+                            dialog.set_value('week_range',
                                 `<div class="week-range">${weekStart.format('MMM DD')} - ${weekEnd.format('MMM DD, YYYY')}</div>`
                             );
                         }
@@ -1116,7 +1070,7 @@ function initializeTimesheet(page, content, initialDate) {
                     }
                 ],
                 primary_action_label: __('Select'),
-                primary_action: function() {
+                primary_action: function () {
                     timesheetApp.currentDate = moment(dialog.get_value('selected_date'));
                     timesheetApp.updateDateRange();
                     dialog.hide();
@@ -1165,30 +1119,29 @@ function initializeTimesheet(page, content, initialDate) {
     });
 
     content.on('change', '.day-hours', function () {
-        let $row = $(this).closest('tr');
-        let date = $row.data('date');
-        let hours = parseFloat($(this).val()) || 0;
-        let description = $row.find('.description').text();
-
-        if (description.includes('Holiday')) {
-            if (is_weekend(date)) {
-                $(this).val(0);
-            } else {
-                $(this).val(8);
-            }
-            return;
+        let $input = $(this);
+        let date = $input.data('date');
+        let isHolidayDay = holidays[date] && !is_weekend(moment(date));
+        let isWeekend = is_weekend(moment(date));
+        
+        if (isHolidayDay) {
+            $input.val(8);  // Force 8 hours for holidays
+            $input.prop('readonly', true);
+            updateTotals();
+            return false;
         }
-
-        if (is_weekend(date)) {
-            $(this).val(0);
-            return;
+        
+        if (isWeekend) {
+            $input.val(0);
+            $input.prop('readonly', true);
+            updateTotals();
+            return false;
         }
-
+        
+        let hours = parseFloat($input.val()) || 0;
         if (hours < 0 || hours > 24) {
             frappe.throw(__('Hours must be between 0 and 24'));
-            $(this).val(0);
-        } else if (hours % 0.5 !== 0) {
-            $(this).val(Math.round(hours * 2) / 2);
+            $input.val(0);
         }
 
         updateTotals();
@@ -1197,12 +1150,12 @@ function initializeTimesheet(page, content, initialDate) {
     const createNewRow = (task) => {
         let weekStart = timesheetApp.currentDate.clone().startOf('isoWeek').format('YYYY-MM-DD');
         let $tbody = $('#timesheet-entries');
-        
+
         let newRow = generateEntryRow({
             date: weekStart.format('YYYY-MM-DD'),
             task: task
         });
-        
+
         // Insert new row before the task selector
         $(newRow).insertBefore('.task-selector-row');
         updateTotals();
@@ -1210,7 +1163,7 @@ function initializeTimesheet(page, content, initialDate) {
 
     // Add new method to populate tasks
     const populateTasks = () => {
-        $('.task-input').each(function() {
+        $('.task-input').each(function () {
             let $input = $(this);
             frappe.ui.form.make_control({
                 parent: $input.parent(),
@@ -1256,124 +1209,29 @@ function initializeTimesheet(page, content, initialDate) {
     };
 
     // Add handler for add row button
-    content.on('click', '.add-row', function() {
+    content.on('click', '.add-row', function () {
         let $tbody = $('#timesheet-entries');
         let newRow = generateEntryRow({
             date: timesheetApp.currentDate.format('YYYY-MM-DD'),
-            weekday: timesheetApp.currentDate.format('dddd')
+            weekday: timesheetApp.currentDate.format('dddd'),
+            entries: {} // Empty entries object for new row
         });
         let $newRow = $(newRow);
         $tbody.find('.add-row-container').before($newRow);
-
-        // Initialize task field using the existing function
+        
+        // After adding the row, set holiday hours
+        $newRow.find('.day-hours[data-is-holiday="true"]').val(8);
+        
+        // Initialize task field
         initializeTaskField($newRow);
         updateTotals();
     });
 
-    // Update the delete row handler
-    content.on('click', '.delete-row', function() {
-        let $row = $(this).closest('tr');
+  
 
-        frappe.confirm(
-            __('Are you sure you want to delete this entry?'),
-            () => {
-                $row.remove();
-                updateTotals();
-                frappe.show_alert({
-                    message: __('Entry deleted successfully'),
-                    indicator: 'green'
-                }, 3);
-            }
-        );
-    });
-
-    // Add custom styles
-    $('<style>')
-        .prop('type', 'text/css')
-        .html(`
-            .timesheet-container { padding: 20px; }
-            .project-cell { padding: 8px; }
-            .project-actions { margin-top: 8px; }
-            .table input.form-control { border: none; background: transparent; }
-            .totals-row { background-color: #f8f9fa; }
-            .progress { background-color: #e9ecef; }
-            .weekend { background-color: #f8f9fa; }
-            .delete-row { padding: 2px 5px; }
-            .delete-row:hover { background-color: #dc3545; color: white; }
-            .day-cell { display: flex; flex-direction: column; }
-            .comment-input { 
-                margin-top: 5px; 
-                font-size: 12px; 
-                padding: 2px 5px;
-                border-top: 1px solid #eee;
-             }
-            .task-selector-container { padding: 10px 0; }
-            .task-name { display: flex; justify-content: space-between; align-items: center; }
-            .delete-row { visibility: visible !important; }
-            .employee-info {
-                background-color: #f8f9fa;
-                padding: 15px;
-                border-radius: 4px;
-                margin-bottom: 15px;
-            }
-            .employee-info label {
-                font-size: 12px;
-                margin-bottom: 2px;
-            }
-
-            /* Dark mode styles */
-            [data-theme="dark"] .timesheet-container {
-                background-color: var(--bg-color);
-                color: #ffffff;
-            }
-            [data-theme="dark"] .table {
-                color: #ffffff;
-            }
-            [data-theme="dark"] .table-bordered td,
-            [data-theme="dark"] .table-bordered th {
-                border-color: #3e4959;
-            }
-            [data-theme="dark"] .employee-info,
-            [data-theme="dark"] .weekend,
-            [data-theme="dark"] .timesheet-status,
-            [data-theme="dark"] .comment-display,
-            [data-theme="dark"] .task-input-container input {
-                background-color: var(--fg-color) !important;
-            }
-            [data-theme="dark"] .btn-default {
-                background-color: var(--fg-color);
-                color: #ffffff;
-                border-color: #3e4959;
-            }
-            [data-theme="dark"] .btn-default:hover {
-                background-color: var(--bg-color);
-            }
-            [data-theme="dark"] .comment-input {
-                border-top-color: #3e4959;
-                background-color: var(--fg-color);
-                color: #ffffff;
-            }
-            [data-theme="dark"] .text-muted {
-                color: rgba(255, 255, 255, 0.6) !important;
-            }
-            [data-theme="dark"] .progress {
-                background-color: var(--fg-color);
-            }
-            [data-theme="dark"] input.form-control {
-                color: #ffffff;
-                background-color: var(--fg-color) !important;
-            }
-            [data-theme="dark"] .indicator-separator {
-                background: #3e4959;
-            }
-            [data-theme="dark"] .task-input-container input {
-                border-color: #3e4959 !important;
-            }
-        `)
-        .appendTo('head');
-
+    
     // Initialize everything at once
-    $(document).ready(function() {
+    $(document).ready(function () {
         fetchEmployeeInfo();
         initializeDatePicker();
         // Remove the populateTasks call
@@ -1382,51 +1240,39 @@ function initializeTimesheet(page, content, initialDate) {
         // });
 
         // Update save button handler
-        content.on('click', '.btn-save', function() {
+        content.on('click', '.btn-save', function () {
             saveTimesheet();
         });
 
-        // Update add row handler
-        content.on('click', '.add-row', function() {
-            let $tbody = $('#timesheet-entries');
-            let newRow = generateEntryRow({
-                date: timesheetApp.currentDate.format('YYYY-MM-DD'),
-                weekday: timesheetApp.currentDate.format('dddd')
-            });
-            let $newRow = $(newRow);
-            $tbody.find('.add-row-container').before($newRow);
-            initializeTaskField($newRow);
-            updateTotals();
-        });
     });
 
     // Add click handlers for save and submit buttons
-    content.on('click', '.btn-save', function() {
+    content.on('click', '.btn-save', function () {
         saveTimesheet();
     });
 
-    content.on('click', '.btn-primary, .btn-danger', function(e) {
+    content.on('click', '.btn-primary, .btn-danger', function (e) {
         e.preventDefault();
         e.stopPropagation();
-        
+
         if ($(this).hasClass('btn-primary')) {
             submitTimesheet();
         } else if ($(this).hasClass('btn-danger')) {
             frappe.confirm(
                 __('Are you sure you want to cancel this timesheet?'),
-                function() {
+                function () {
                     frappe.call({
                         method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.cancel_timesheet',
                         args: {
                             timesheet_name: currentTimesheet
                         },
-                        callback: function(r) {
+                        callback: function (r) {
                             if (r.message && r.message.status === "success") {
                                 frappe.show_alert({
                                     message: __('Timesheet cancelled successfully'),
                                     indicator: 'red'
                                 });
-                                
+
                                 // Reset UI state
                                 currentTimesheet = null;
                                 $('.btn-danger')
@@ -1434,7 +1280,7 @@ function initializeTimesheet(page, content, initialDate) {
                                     .addClass('btn-primary')
                                     .text('Submit');
                                 $('.btn-save').show();
-                                
+
                                 // Reload the data
                                 loadTimesheetData();
                             } else {
@@ -1544,7 +1390,7 @@ function initializeTimesheet(page, content, initialDate) {
     // Update the status indicators based on timesheet state
     const updateStatusIndicators = (status) => {
         $('.indicator-circle').removeClass('active');
-        switch(status) {
+        switch (status) {
             case 'Draft':
                 $('.indicator-circle.draft').addClass('active');
                 break;
@@ -1578,7 +1424,7 @@ const isManager = (employeeId) => {
         callback: (r) => {
             return r.message && r.message.is_manager;
         }
-    });
+    }); 
 };
 
 const showApproveButton = () => {
@@ -1588,9 +1434,9 @@ const showApproveButton = () => {
                 Approve Timesheet
             </button>
         `);
-        
+
         $('.footer-actions').prepend($approveBtn);
-        
+
         $approveBtn.click(() => {
             showApprovalDialog();
         });
@@ -1653,17 +1499,17 @@ const showCancelDialog = () => {
                     timesheet_name: currentTimesheet,
                     comment: values.comment
                 },
-                callback: function(r) {
+                callback: function (r) {
                     if (r.message && r.message.status === "success") {
                         d.hide();
                         frappe.show_alert({
                             message: __('Timesheet cancelled successfully'),
                             indicator: 'red'
                         }, 3);
-                        
+
                         // Show cancellation info
                         showCancellationInfo(r.message.timesheet);
-                        
+
                         // Reload the timesheet data
                         loadTimesheetData();
                     } else {
@@ -1684,18 +1530,18 @@ const showCancellationInfo = (timesheet) => {
             <div class="mt-2">Comment: ${timesheet.cancellation_comment || ''}</div>
         </div>
     `;
-    
+
     $('.cancellation-info').remove();
     $(html).addClass('cancellation-info mb-4').insertAfter('.summary-section');
 };
 
 frappe.ui.form.on('Custom Timesheet', {
-    refresh: function(frm) {
+    refresh: function (frm) {
         // ...existing code for fetching employee details, approve button, etc...
 
         // Modify the cancel button action to prompt for a cancellation comment
-        if(frm.doc.docstatus === 1 && frm.doc.status !== "Cancelled") {
-            frm.add_custom_button(__('Cancel'), function() {
+        if (frm.doc.docstatus === 1 && frm.doc.status !== "Cancelled") {
+            frm.add_custom_button(__('Cancel'), function () {
                 frappe.prompt([
                     {
                         fieldname: 'comment',
@@ -1704,28 +1550,28 @@ frappe.ui.form.on('Custom Timesheet', {
                         reqd: 1
                     }
                 ],
-                function(values) {
-                    frappe.call({
-                        method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.cancel_timesheet',
-                        args: {
-                            timesheet_name: frm.doc.name,
-                            comment: values.comment
-                        },
-                        callback: function(r) {
-                            if (r.message && r.message.status === "success") {
-                                frappe.show_alert({
-                                    message: __('Timesheet cancelled successfully'),
-                                    indicator: 'green'
-                                });
-                                frm.reload_doc();
-                            } else {
-                                frappe.msgprint(r.message.message);
+                    function (values) {
+                        frappe.call({
+                            method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.cancel_timesheet',
+                            args: {
+                                timesheet_name: frm.doc.name,
+                                comment: values.comment
+                            },
+                            callback: function (r) {
+                                if (r.message && r.message.status === "success") {
+                                    frappe.show_alert({
+                                        message: __('Timesheet cancelled successfully'),
+                                        indicator: 'green'
+                                    });
+                                    frm.reload_doc();
+                                } else {
+                                    frappe.msgprint(r.message.message);
+                                }
                             }
-                        }
-                    });
-                },
-                __('Cancel Timesheet'),
-                __('Submit'));
+                        });
+                    },
+                    __('Cancel Timesheet'),
+                    __('Submit'));
             }, __('Actions'));
         }
 

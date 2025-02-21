@@ -1,6 +1,3 @@
-# Copyright (c) 2025, kishore and contributors
-# For license information, please see license.txt
-
 from frappe.model.document import Document
 import frappe
 from frappe import _
@@ -185,7 +182,29 @@ class CustomTimesheet(Document):
     def calculate_total_hours(self):
         self.total_hours = sum(d.hours for d in self.daily_entries if d.hours)
 
+    # def set_reporting_manager(self):
+    #     if self.employee and not self.reporting_manager:
+    #         employee_doc = frappe.get_doc("Employee", self.employee)
+    #         if employee_doc.reports_to:
+    #             self.reporting_manager = employee_doc.reports_to
+
+    # def on_cancel(self):
+    #     """When timesheet is cancelled"""
+    #     self.status = "Cancelled"
+        
+    #     # Notify manager about cancellation
+    #     if self.reporting_manager:
+    #         self.notify_manager_on_cancel()
+
+    # def notify_manager_on_cancel(self):
+    #     """Send notification to manager about cancellation"""
+    #     manager = frappe.db.get_value("Employee",
+    #         self.reporting_manager,
+    #         ["user_id", "employee_name"],
+    #         as_dict=1
+    #     )
     def set_reporting_manager(self):
+        """Assign reporting manager if not already set"""
         if self.employee and not self.reporting_manager:
             employee_doc = frappe.get_doc("Employee", self.employee)
             if employee_doc.reports_to:
@@ -194,18 +213,24 @@ class CustomTimesheet(Document):
     def on_cancel(self):
         """When timesheet is cancelled"""
         self.status = "Cancelled"
-        
+
+        # Ensure reporting_manager is set before using it
+        if not self.reporting_manager:
+            self.set_reporting_manager()
+
         # Notify manager about cancellation
         if self.reporting_manager:
             self.notify_manager_on_cancel()
 
     def notify_manager_on_cancel(self):
         """Send notification to manager about cancellation"""
-        manager = frappe.db.get_value("Employee",
+        manager = frappe.db.get_value(
+            "Employee",
             self.reporting_manager,
             ["user_id", "employee_name"],
-            as_dict=1
+            as_dict=True
         )
+
         
         if not manager or not manager.user_id:
             return
