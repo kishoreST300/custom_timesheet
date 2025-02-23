@@ -3,6 +3,29 @@
 
 frappe.ui.form.on('Custom Timesheet', {
     refresh: function(frm) {
+        // Ensure status is always Saved for non-submitted docs
+        if (frm.doc.docstatus === 0) {
+            frm.doc.status = 'Saved';
+            frm.refresh_field('status');
+        }
+
+        // Set simple indicator
+        if (frm.doc.status) {
+            let color = {
+                'Saved': 'blue',
+                'Submitted': 'yellow',
+                'Approved': 'green',
+                'Cancelled': 'red'
+            }[frm.doc.status] || 'gray';
+            
+            frm.page.set_indicator(__(frm.doc.status), color);
+        }
+
+        // Clear any existing indicators in dashboard
+        if (frm.dashboard) {
+            frm.dashboard.clear_headline();
+        }
+
         // Get employee details using direct SQL
         frappe.call({
             method: "custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.get_user_employee_details",
@@ -210,6 +233,17 @@ frappe.ui.form.on('Custom Timesheet', {
             }, __("Actions"));
         }
 
+        // Remove the headline alert code block completely
+        // Replace the indicator formatter code and keep only the header indicator
+        if (!frm.is_new()) {
+            frm.page.set_indicator(frm.doc.status, {
+                'Saved': 'blue',
+                'Submitted': 'yellow',
+                'Approved': 'green',
+                'Cancelled': 'red'
+            }[frm.doc.status]);
+        }
+
         // ...rest of existing refresh code...
     },
 
@@ -313,8 +347,9 @@ frappe.ui.form.on('Custom Timesheet', {
     },
 
     after_save: function(frm) {
-        // Refresh the form to ensure all calculations are updated
-        frm.reload_doc();
+        // Update the indicator after saving
+        frm.page.set_indicator(frm.doc.status, frappe.utils.guess_colour(frm.doc.status));
+        frm.reload_doc(); // Reload to get latest status
     }
 });
 

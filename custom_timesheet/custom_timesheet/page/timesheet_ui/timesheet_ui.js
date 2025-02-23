@@ -125,8 +125,8 @@ frappe.pages['timesheet-ui'].on_page_load = function (wrapper) {
 
     // Add custom styles
     $('<style>')
-    .prop('type', 'text/css')
-    .html(`
+        .prop('type', 'text/css')
+        .html(`
         .timesheet-container { padding: 20px; }
         .project-cell { padding: 8px; }
         .project-actions { margin-top: 8px; }
@@ -234,9 +234,9 @@ frappe.pages['timesheet-ui'].on_page_load = function (wrapper) {
             background-color: #00bcd4 !important;
         }
     `)
-    .appendTo('head');
+        .appendTo('head');
 
-   
+
 
     // Store currentDate in a more accessible way
     window.timesheetApp = {
@@ -248,7 +248,7 @@ frappe.pages['timesheet-ui'].on_page_load = function (wrapper) {
     initializeTimesheet(page, content, window.timesheetApp.currentDate);
 };
 
-function initializeTimesheet(page, content, initialDate) {
+async function initializeTimesheet(page, content, initialDate) {
     let holidays = {};
     let currentTimesheet = null;
     let employeeInfo = null;
@@ -271,14 +271,14 @@ function initializeTimesheet(page, content, initialDate) {
         let nonBillableHours = 0;
         let timeOffHours = 0;
 
-        $('.timesheet-grid tr').each(function() {
+        $('.timesheet-grid tr').each(function () {
             let rowTotal = 0;
-            $(this).find('.day-hours').each(function() {
+            $(this).find('.day-hours').each(function () {
                 let $cell = $(this);
                 let date = $cell.data('date');
                 let isHolidayDay = holidays[date] && !is_weekend(moment(date));
                 let isWeekend = is_weekend(moment(date));
-                
+
                 // Just use the value that's already there, don't modify it
                 let hours = parseFloat($cell.val() || $cell.attr('value')) || 0;
                 let isTimeOff = isHolidayDay || isWeekend;
@@ -343,7 +343,7 @@ function initializeTimesheet(page, content, initialDate) {
             let isWeekend = is_weekend(dayDate);
 
             let comment = isDayHoliday ? holidays[dateStr] : (isWeekend ? "Week Off" : "");
-            
+
             // Initialize hours to 0
             let hours = 0;
 
@@ -389,23 +389,26 @@ function initializeTimesheet(page, content, initialDate) {
 
 
     const fetchEmployeeInfo = () => {
-        return frappe.call({
-            method: "custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.get_employee_info",
-            callback: (r) => {
-                if (r.message && r.message.status === "success") {
-                    employeeInfo = r.message.employee;
-                    $('.employee-name').text(employeeInfo.employee_name || 'Not Available');
-                    $('.reporting-manager').text(employeeInfo.manager_name || 'Not Assigned');
-                    return employeeInfo;
-                } else {
-                    frappe.show_alert({
-                        message: __(r.message?.message || 'Unable to fetch employee details. Please contact HR.'),
-                        indicator: 'red'
-                    });
-                    $('.employee-name').text('Not Available');
-                    $('.reporting-manager').text('Not Available');
+        return new Promise((resolve, reject) => {
+            frappe.call({
+                method: "custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.get_employee_info",
+                callback: (r) => {
+                    if (r.message && r.message.status === "success") {
+                        employeeInfo = r.message.employee;
+                        $('.employee-name').text(employeeInfo.employee_name || 'Not Available');
+                        $('.reporting-manager').text(employeeInfo.manager_name || 'Not Assigned');
+                        resolve(employeeInfo);
+                    } else {
+                        frappe.show_alert({
+                            message: __(r.message?.message || 'Unable to fetch employee details. Please contact HR.'),
+                            indicator: 'red'
+                        });
+                        $('.employee-name').text('Not Available');
+                        $('.reporting-manager').text('Not Available');
+                        reject(new Error('Failed to fetch employee info'));
+                    }
                 }
-            }
+            });
         });
     };
 
@@ -534,6 +537,79 @@ function initializeTimesheet(page, content, initialDate) {
         appendAddRowButton($tbody);
     };
 
+    // const saveTimesheet = () => {
+    //     if (!employeeInfo || !employeeInfo.name) {
+    //         frappe.throw(__('Employee record not found. Please contact HR.'));
+    //         return;
+    //     }
+
+    //     let weekStart = timesheetApp.currentDate.clone().startOf('isoWeek').format('YYYY-MM-DD');
+    //     let entries = [];
+
+    //     // Modified: Collect entries from all visible rows
+    //     $('#timesheet-entries tr').not('.add-row-container').each(function () {
+    //         let $row = $(this);
+    //         let task = $row.find('.task-input-container .frappe-control input').val();
+
+    //         if (!task) return; // Skip rows without tasks
+
+    //         $row.find('.day-cell').each(function () {
+    //             let $cell = $(this);
+    //             let date = $cell.find('.day-hours').data('date');
+    //             let hours = parseFloat($cell.find('.day-hours').val() || $cell.find('.day-hours').attr('value')) || 0;
+    //             let comment = $cell.find('.comment-input').val() || '';
+
+    //             // Include all entries with hours or comments
+    //             if (date) {  // Changed: Include all entries for the task
+    //                 entries.push({
+    //                     date: date,
+    //                     task: task,
+    //                     hours: hours,
+    //                     comment: comment
+    //                 });
+    //             }
+    //         });
+    //     });
+
+    //     // Check if there's at least one entry with hours > 0
+    //     let hasValidEntry = entries.some(entry => entry.hours > 0);
+    //     if (!hasValidEntry) {
+    //         frappe.throw(__('Please add at least one time entry with hours greater than 0'));
+    //         return;
+    //     }
+
+    //     // Save timesheet
+    //     frappe.call({
+    //         method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.save_timesheet_entry',
+    //         args: {
+    //             week_start: weekStart,
+    //             entries: entries,
+    //             employee: employeeInfo.name
+    //         },
+    //         callback: (r) => {
+    //             if (r.message && r.message.status === "success") {
+    //                 currentTimesheet = r.message.timesheet;
+
+    //                 // Update UI with saved data
+    //                 if (r.message.data && r.message.data.daily_entries) {
+    //                     updateTimesheetEntries(r.message.data.daily_entries);
+    //                 }
+
+    //                 updateTotals();
+    //                 frappe.show_alert({
+    //                     message: __('Timesheet saved successfully'),
+    //                     indicator: 'green'
+    //                 }, 3);
+    //                 updateStatusIndicators('Saved');
+    //             } else {
+    //                 frappe.msgprint(r.message ? r.message.message : __('Could not save timesheet'));
+    //             }
+    //         }
+    //     });
+    // };
+
+    // Add new helper function to update timesheet entries
+
     const saveTimesheet = () => {
         if (!employeeInfo || !employeeInfo.name) {
             frappe.throw(__('Employee record not found. Please contact HR.'));
@@ -543,39 +619,39 @@ function initializeTimesheet(page, content, initialDate) {
         let weekStart = timesheetApp.currentDate.clone().startOf('isoWeek').format('YYYY-MM-DD');
         let entries = [];
 
-        // Collect entries from all visible rows
-        $('.add-row').on('click', function () {
-            let newRow = $('#timesheet-entries tr').first().clone(); // Clone an existing row
-            newRow.find('input').val(''); // Clear inputs for new row
-        
-            newRow.find('.day-hours').each(function () {
+        $('#timesheet-entries tr').not('.add-row-container').each(function () {
+            let $row = $(this);
+            let task = $row.find('.task-input-container .frappe-control input').val();
+            if (!task) return;
+
+            $row.find('.day-cell').each(function () {
                 let $cell = $(this);
-                let date = $cell.data('date');
-                let isHolidayDay = holidays[date] && !is_weekend(moment(date));
-        
-                // Set holiday hours only if this is the first row for that date
-                let existingRowsForDate = $('.timesheet-grid .day-hours').filter(function () {
-                    return $(this).data('date') === date;
-                });
-        
-                if (isHolidayDay && existingRowsForDate.length === 0) {
-                    $cell.val(8); // Set 8 hours only for the first holiday row
-                } else {
-                    $cell.val(''); // Keep empty for additional rows
+                let date = $cell.find('.day-hours').data('date');
+                let hours = parseFloat($cell.find('.day-hours').val() || $cell.find('.day-hours').attr('value')) || 0;
+                let comment = $cell.find('.comment-input').val() || '';
+
+                if (date) {
+                    entries.push({
+                        date: date,
+                        task: task,
+                        hours: hours,
+                        comment: comment
+                    });
                 }
             });
-        
-            $('#timesheet-entries').append(newRow);
-            updateTotals(); // Recalculate totals after adding row
         });
-        
 
-        if (entries.length === 0) {
-            frappe.throw(__('Please add at least one time entry'));
+        let hasValidEntry = entries.some(entry => entry.hours > 0);
+        if (!hasValidEntry) {
+            frappe.throw(__('Please add at least one time entry with hours greater than 0'));
             return;
         }
 
-        // Save timesheet
+        // Disable save button to prevent multiple clicks
+        let $saveButton = $('.btn-save');
+        if ($saveButton.prop('disabled')) return; // Prevent multiple submissions
+        $saveButton.prop('disabled', true).text('Saving...');
+
         frappe.call({
             method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.save_timesheet_entry',
             args: {
@@ -584,22 +660,16 @@ function initializeTimesheet(page, content, initialDate) {
                 employee: employeeInfo.name
             },
             callback: (r) => {
+                $saveButton.prop('disabled', false).text('Save'); // Re-enable button
+
                 if (r.message && r.message.status === "success") {
                     currentTimesheet = r.message.timesheet;
 
-                    // Update UI with saved data
                     if (r.message.data && r.message.data.daily_entries) {
-                        r.message.data.daily_entries.forEach(entry => {
-                            let $row = $(`.timesheet-grid tr:has(.task-input-container input[value="${entry.task}"])`);
-                            if ($row.length) {
-                                $row.find(`.day-hours[data-date="${entry.date}"]`).val(entry.hours);
-                                $row.find(`.comment-input[data-date="${entry.date}"]`).val(entry.comment);
-                            }
-                        });
+                        updateTimesheetEntries(r.message.data.daily_entries);
                     }
 
                     updateTotals();
-
                     frappe.show_alert({
                         message: __('Timesheet saved successfully'),
                         indicator: 'green'
@@ -607,6 +677,29 @@ function initializeTimesheet(page, content, initialDate) {
                     updateStatusIndicators('Saved');
                 } else {
                     frappe.msgprint(r.message ? r.message.message : __('Could not save timesheet'));
+                }
+            }
+        });
+    };
+
+    $(document).ready(function () {
+        fetchEmployeeInfo();
+        initializeDatePicker();
+
+        // Ensure event is only bound once
+        content.off('click', '.btn-save').on('click', '.btn-save', function () {
+            saveTimesheet();
+        });
+    });
+
+    const updateTimesheetEntries = (entries) => {
+        entries.forEach(entry => {
+            let $row = $(`.timesheet-grid tr:has(.task-input-container input[value="${entry.task}"])`);
+            if ($row.length) {
+                $row.find(`.day-hours[data-date="${entry.date}"]`).val(entry.hours);
+                let $commentInput = $row.find(`.comment-input[data-date="${entry.date}"]`);
+                if ($commentInput.length) {
+                    $commentInput.val(entry.description || '');
                 }
             }
         });
@@ -775,57 +868,99 @@ function initializeTimesheet(page, content, initialDate) {
         );
     };
 
+    // const showCancellationInfo = (timesheet) => {
+    //     $('.cancellation-info').remove();
+
+    //     if (!timesheet || timesheet.status !== 'Cancelled') return;
+
+    //     let html = `
+    //         <div class="cancellation-info alert alert-danger mb-3">
+    //             <div class="d-flex justify-content-between align-items-center">
+    //                 <div>
+    //                     <div class="cancelled-by font-weight-bold">Cancelled by: ${timesheet.cancelled_by_name || ''}</div>
+    //                     <div class="text-muted">On: ${frappe.datetime.str_to_user(timesheet.cancelled_on)}</div>
+    //                     <div class="mt-2">Comment: ${timesheet.cancellation_comment || ''}</div>
+    //                 </div>
+    //                 <div class="cancellation-status">
+    //                     <span class="indicator-pill red">Cancelled</span>
+    //                 </div>
+    //             </div>
+    //         </div>
+    //     `;
+
+    //     $(html).insertAfter('.summary-section');
+    // };
+
     const showCancellationInfo = (timesheet) => {
         $('.cancellation-info').remove();
 
         if (!timesheet || timesheet.status !== 'Cancelled') return;
 
+        let cancelledOn = timesheet.cancelled_on ? frappe.datetime.str_to_user(timesheet.cancelled_on) : __("Unknown Date");
+
         let html = `
             <div class="cancellation-info alert alert-danger mb-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="cancelled-by font-weight-bold">Cancelled by: ${timesheet.cancelled_by_name || ''}</div>
-                        <div class="text-muted">On: ${frappe.datetime.str_to_user(timesheet.cancelled_on)}</div>
-                        <div class="mt-2">Comment: ${timesheet.cancellation_comment || ''}</div>
+                        <div class="cancelled-by font-weight-bold">${__("Cancelled by")}: ${timesheet.cancelled_by_name || __("Unknown")}</div>
+                        <div class="text-muted">${__("On")}: ${cancelledOn}</div>
+                        <div class="mt-2">${__("Comment")}: ${timesheet.cancellation_comment || __("No comment provided")}</div>
                     </div>
                     <div class="cancellation-status">
-                        <span class="indicator-pill red">Cancelled</span>
+                        <span class="indicator-pill red">${__("Cancelled")}</span>
                     </div>
                 </div>
             </div>
         `;
 
-        $(html).insertAfter('.summary-section');
+        // Ensure `.summary-section` exists before inserting
+        if ($('.summary-section').length) {
+            $(html).insertAfter('.summary-section');
+        } else {
+            $('.page-content').prepend(html); // Fallback placement
+        }
     };
 
-    const fetchAndPopulateTimesheet = () => {
-        // First fetch holidays
-        frappe.call({
-            method: "frappe.client.get_list",
-            args: {
-                doctype: "Holiday",
-                parent: "Holiday List",
-                filters: [
-                    ["holiday_date", "between", [
-                        timesheetApp.currentDate.clone().startOf('isoWeek').format('YYYY-MM-DD'),
-                        timesheetApp.currentDate.clone().endOf('isoWeek').format('YYYY-MM-DD')
-                    ]]
-                ],
-                fields: ["holiday_date", "description"]
-            },
-            callback: function (response) {
-                holidays = {};
-                if (response.message) {
-                    response.message.forEach(holiday => {
-                        holidays[holiday.holiday_date] = holiday.description;
-                    });
-                }
-
-                // Then fetch timesheet data
-                loadTimesheetData();
+    const fetchAndPopulateTimesheet = async () => {
+        try {
+            if (!employeeInfo) {
+                await fetchEmployeeInfo();
             }
-        });
+
+            // Fetch holidays
+            const holidayResponse = await frappe.call({
+                method: "frappe.client.get_list",
+                args: {
+                    doctype: "Holiday",
+                    parent: "Holiday List",
+                    filters: [
+                        ["holiday_date", "between", [
+                            timesheetApp.currentDate.clone().startOf('isoWeek').format('YYYY-MM-DD'),
+                            timesheetApp.currentDate.clone().endOf('isoWeek').format('YYYY-MM-DD')
+                        ]]
+                    ],
+                    fields: ["holiday_date", "description"]
+                }
+            });
+
+            holidays = {};
+            if (holidayResponse.message) {
+                holidayResponse.message.forEach(holiday => {
+                    holidays[holiday.holiday_date] = holiday.description;
+                });
+            }
+
+            // Then fetch timesheet data
+            await loadTimesheetData();
+        } catch (error) {
+            console.error('Error in fetchAndPopulateTimesheet:', error);
+            frappe.show_alert({
+                message: __('Error loading timesheet data. Please refresh the page.'),
+                indicator: 'red'
+            });
+        }
     };
+
 
     const loadTimesheetData = () => {
         let weekStart = timesheetApp.currentDate.clone().startOf('isoWeek').format('YYYY-MM-DD');
@@ -879,10 +1014,10 @@ function initializeTimesheet(page, content, initialDate) {
                 }
 
                 // Show approve button for managers when timesheet is submitted
-                if (isManager(r.message.timesheet.employee) &&
-                    r.message.timesheet.status === 'Submitted') {
-                    showApproveButton();
-                }
+                // if (isManager(r.message.timesheet.employee) &&
+                //     r.message.timesheet.status === 'Submitted') {
+                //     showApproveButton();
+                // }
 
                 // Group entries by task and date for easier lookup
                 let taskGroups = {};
@@ -1123,21 +1258,21 @@ function initializeTimesheet(page, content, initialDate) {
         let date = $input.data('date');
         let isHolidayDay = holidays[date] && !is_weekend(moment(date));
         let isWeekend = is_weekend(moment(date));
-        
+
         if (isHolidayDay) {
             $input.val(8);  // Force 8 hours for holidays
             $input.prop('readonly', true);
             updateTotals();
             return false;
         }
-        
+
         if (isWeekend) {
             $input.val(0);
             $input.prop('readonly', true);
             updateTotals();
             return false;
         }
-        
+
         let hours = parseFloat($input.val()) || 0;
         if (hours < 0 || hours > 24) {
             frappe.throw(__('Hours must be between 0 and 24'));
@@ -1218,18 +1353,18 @@ function initializeTimesheet(page, content, initialDate) {
         });
         let $newRow = $(newRow);
         $tbody.find('.add-row-container').before($newRow);
-        
+
         // After adding the row, set holiday hours
         $newRow.find('.day-hours[data-is-holiday="true"]').val(8);
-        
+
         // Initialize task field
         initializeTaskField($newRow);
         updateTotals();
     });
 
-  
 
-    
+
+
     // Initialize everything at once
     $(document).ready(function () {
         fetchEmployeeInfo();
@@ -1424,58 +1559,58 @@ const isManager = (employeeId) => {
         callback: (r) => {
             return r.message && r.message.is_manager;
         }
-    }); 
-};
-
-const showApproveButton = () => {
-    if (!$('.btn-approve').length) {
-        let $approveBtn = $(`
-            <button class="btn btn-success btn-approve">
-                Approve Timesheet
-            </button>
-        `);
-
-        $('.footer-actions').prepend($approveBtn);
-
-        $approveBtn.click(() => {
-            showApprovalDialog();
-        });
-    }
-};
-
-const showApprovalDialog = () => {
-    let dialog = new frappe.ui.Dialog({
-        title: __('Approve Timesheet'),
-        fields: [{
-            label: __('Comment'),
-            fieldname: 'comment',
-            fieldtype: 'Small Text',
-            reqd: true
-        }],
-        primary_action_label: __('Approve'),
-        primary_action: (values) => {
-            frappe.call({
-                method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.approve_timesheet',
-                args: {
-                    timesheet_name: currentTimesheet,
-                    comment: values.comment
-                },
-                callback: (r) => {
-                    if (r.message && r.message.status === 'success') {
-                        frappe.show_alert({
-                            message: __('Timesheet approved successfully'),
-                            indicator: 'green'
-                        });
-                        dialog.hide();
-                        loadTimesheetData();  // Reload to show updated status
-                    } else {
-                        frappe.msgprint(r.message.message || __('Could not approve timesheet'));
-                    }
-                }
-            });
-        }
     });
 };
+
+// const showApproveButton = () => {
+//     if (!$('.btn-approve').length) {
+//         let $approveBtn = $(`
+//             <button class="btn btn-success btn-approve">
+//                 Approve Timesheet
+//             </button>
+//         `);
+
+//         $('.footer-actions').prepend($approveBtn);
+
+//         $approveBtn.click(() => {
+//             showApprovalDialog();
+//         });
+//     }
+// };
+
+// const showApprovalDialog = () => {
+//     let dialog = new frappe.ui.Dialog({
+//         title: __('Approve Timesheet'),
+//         fields: [{
+//             label: __('Comment'),
+//             fieldname: 'comment',
+//             fieldtype: 'Small Text',
+//             reqd: true
+//         }],
+//         primary_action_label: __('Approve'),
+//         primary_action: (values) => {
+//             frappe.call({
+//                 method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.approve_timesheet',
+//                 args: {
+//                     timesheet_name: currentTimesheet,
+//                     comment: values.comment
+//                 },
+//                 callback: (r) => {
+//                     if (r.message && r.message.status === 'success') {
+//                         frappe.show_alert({
+//                             message: __('Timesheet approved successfully'),
+//                             indicator: 'green'
+//                         });
+//                         dialog.hide();
+//                         loadTimesheetData();  // Reload to show updated status
+//                     } else {
+//                         frappe.msgprint(r.message.message || __('Could not approve timesheet'));
+//                     }
+//                 }
+//             });
+//         }
+//     });
+// };
 
 const showCancelDialog = () => {
     if (!currentTimesheet) {

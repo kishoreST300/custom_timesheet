@@ -1,34 +1,34 @@
 frappe.listview_settings['Custom Timesheet'] = {
     get_indicator: function(doc) {
+        // Always return Saved for any document with docstatus 0
         if (doc.docstatus === 0) {
-            return [__("Draft"), "gray", "docstatus,=,0"];
-        } else if (doc.docstatus === 1) {
-            if (doc.workflow_state === "Approved") {
-                return [__("Approved"), "green", "workflow_state,=,Approved"];
-            }
-            return [__("Submitted"), "orange", "workflow_state,=,Submitted"];
-        } else if (doc.docstatus === 2) {
-            return [__("Cancelled"), "red", "docstatus,=,2"];
+            doc.status = 'Saved';
+            return ['Saved', 'blue', 'status,=,Saved'];
         }
+        
+        const colors = {
+            'Submitted': 'yellow',
+            'Approved': 'green',
+            'Cancelled': 'red'
+        };
+        
+        return [doc.status || 'Saved', colors[doc.status] || 'blue', 'status,=,' + (doc.status || 'Saved')];
     },
 
-    // Add button to refresh list after actions
     onload: function(listview) {
-        listview.page.add_inner_button(__("Refresh"), function() {
+        // Update all draft documents to show as Saved
+        listview.page.add_action_item(__('Refresh List'), function() {
             listview.refresh();
         });
     },
 
-    formatters: {
-        status: function(value) {
-            let colors = {
-                'Draft': 'gray',
-                'Submitted': 'orange',
-                'Approved': 'green',
-                'Rejected': 'red',
-                'Cancelled': 'red'
-            };
-            return `<span class="indicator-pill ${colors[value] || 'gray'}">${value}</span>`;
-        }
+    refresh: function(listview) {
+        // Force status update for all rows
+        listview.data.forEach(function(doc) {
+            if (doc.docstatus === 0) {
+                doc.status = 'Saved';
+            }
+        });
+        listview.render_list();
     }
 };

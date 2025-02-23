@@ -14,10 +14,7 @@ doc_events = {
 
 # DocTypes to be registered
 doctype_js = {
-    "Custom Timesheet": [
-        "public/js/timeSheetPopulate.js",
-        "custom_timesheet/doctype/custom_timesheet/custom_timesheet.js"
-    ]
+    "Custom Timesheet": "custom_timesheet/doctype/custom_timesheet/custom_timesheet.js"
 }
 
 # DocType List JS
