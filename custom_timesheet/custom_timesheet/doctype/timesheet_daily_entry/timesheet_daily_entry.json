@@ -1,62 +1,61 @@
 {
-    "actions": [],
-    "creation": "2024-02-05 10:36:38.460751",
-    "doctype": "DocType",
-    "engine": "InnoDB",
-    "field_order": [
-        "date",
-        "task",
-        "hours",
-        "description",
-        "weekday"
-    ],
-    "fields": [
-        {
-            "fieldname": "date",
-            "fieldtype": "Date",
-            "in_list_view": 1,
-            "label": "Date",
-            "reqd": 0
-        },
-        {
-            "fieldname": "task",
-            "fieldtype": "Link",
-            "in_list_view": 1,
-            "label": "Task",
-            "options": "Task",
-            "reqd": 0
-        },
-        {
-            "fieldname": "hours",
-            "fieldtype": "Float",
-            "in_list_view": 1,
-            "label": "Hours",
-            "precision": 2,
-            "reqd": 0,
-            "default": 0
-        },
-        {
-            "fieldname": "description",
-            "fieldtype": "Small Text",
-            "label": "Description"
-        },
-        {
-            "fieldname": "weekday",
-            "fieldtype": "Data",
-            "in_list_view": 1,
-            "label": "Weekday",
-            "read_only": 1
-        }
-    ],
-    "istable": 1,
-    "links": [],
-    "modified": "2024-02-05 10:36:38.460751",
-    "modified_by": "Administrator",
-    "module": "Custom Timesheet",
-    "name": "Timesheet Daily Entry",
-    "owner": "Administrator",
-    "permissions": [],
-    "sort_field": "modified",
-    "sort_order": "DESC",
-    "track_changes": 1
+ "actions": [],
+ "creation": "2024-02-05 10:36:38.460751",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "date",
+  "task",
+  "hours",
+  "description",
+  "weekday"
+ ],
+ "fields": [
+  {
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Date"
+  },
+  {
+   "fetch_if_empty": 1,
+   "fieldname": "task",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "default": "0",
+   "fieldname": "hours",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Hours",
+   "precision": "2"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "fieldname": "weekday",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Weekday",
+   "read_only": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2025-02-23 22:30:31.635602",
+ "modified_by": "Administrator",
+ "module": "Custom Timesheet",
+ "name": "Timesheet Daily Entry",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
 }

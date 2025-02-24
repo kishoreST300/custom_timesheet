@@ -282,10 +282,38 @@ frappe.ui.form.on('Custom Timesheet', {
     },
 
     validate: function(frm) {
-        // Only validate that fields are filled
-        if (!frm.doc.employee || !frm.doc.employee_name) {
+        let hasValidEntry = false;
+        let missingDescriptions = [];
+        
+        frm.doc.daily_entries.forEach((entry, idx) => {
+            if (entry.hours > 0) {  // Only validate entries with hours
+                if (entry.description) {
+                    hasValidEntry = true;
+                } else {
+                    missingDescriptions.push(
+                        `${frappe.datetime.str_to_user(entry.date)} (${entry.hours} hours)`
+                    );
+                }
+            }
+        });
+
+        if (!hasValidEntry) {
+            frappe.show_alert({
+                message: __('Please add at least one entry with both hours and description'),
+                indicator: 'red'
+            }, 5);
             frappe.validated = false;
-            frappe.throw(__("Employee details are required"));
+            return;
+        }
+
+        if (missingDescriptions.length > 0) {
+            frappe.show_alert({
+                message: __('Please add descriptions for entries on:<br>{0}', 
+                    [missingDescriptions.join('<br>')]),
+                indicator: 'red'
+            }, 7);
+            frappe.validated = false;
+            return;
         }
     },
 

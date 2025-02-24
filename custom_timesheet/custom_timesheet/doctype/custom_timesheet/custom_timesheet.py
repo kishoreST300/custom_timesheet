@@ -1,7 +1,7 @@
 import frappe
 from frappe.model.document import Document
 from frappe import _
-from frappe.utils import getdate
+from frappe.utils import getdate , formatdate
 from frappe.permissions import has_permission
 
 class CustomTimesheet(Document):
@@ -53,6 +53,36 @@ class CustomTimesheet(Document):
         self.calculate_total_hours()
         self.validate_entries()
         self.update_status()
+
+        # Modified validation for entries and descriptions
+        has_valid_entry = False
+        missing_descriptions = []
+
+        for entry in self.daily_entries:
+            if entry.hours > 0:  # Only check entries with hours
+                if entry.description:
+                    has_valid_entry = True
+                else:
+                    missing_descriptions.append(
+                        f"{frappe.utils.formatdate(entry.date)} ({entry.hours} hours)"
+                    )
+            else:
+                # For entries with 0 hours, description is optional
+                entry.description = entry.description or ""  # Set empty string if None
+
+        if not has_valid_entry:
+            frappe.throw(
+                _("Please add at least one entry with both hours and description"),
+                title=_("Missing Entry")
+            )
+
+        if missing_descriptions:
+            frappe.throw(
+                _("Please add descriptions for the following entries:<br>{0}").format(
+                    "<br>".join(missing_descriptions)
+                ),
+                title=_("Missing Descriptions")
+            )
 
         if self.is_new():
             self.status = "Saved"
