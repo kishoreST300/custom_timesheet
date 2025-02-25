@@ -12,7 +12,9 @@ doc_events = {
     }
 }
 
-
+app_include_css = [
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+]
 
 # DocTypes to be registered
 doctype_js = {

@@ -1,5 +1,11 @@
 frappe.pages['timesheet-ui'].on_page_load = function (wrapper) {
     // Declare currentDate at the top level so it's accessible everywhere
+    // frappe.ui.form.on('YourDoctype', {
+    //     refresh: function(frm) {
+    //         console.log('FontAwesome Version:', window.FontAwesome);
+    //     }
+    // });
+    console.log('FontAwesome Version:', window.FontAwesome);
     let currentDate = moment();
     let holidays = {};
     let currentTimesheet = null;
@@ -298,27 +304,6 @@ async function initializeTimesheet(page, content, initialDate) {
         let progressBar = $('.progress-bar');
         progressBar.css('width', `${Math.min(progressPercentage, 100)}%`);
 
-        // Update progress bar color based on percentage
-        // if (totalHours >= 40) {
-        //     progressBar.removeClass('bg-danger bg-warning bg-info bg-secondary bg-success bg-light')
-        //         .addClass('bg-success');
-        // } else if (totalHours >= 32) {
-        //     progressBar.removeClass('bg-danger bg-warning bg-info bg-secondary bg-success bg-light')
-        //         .addClass('bg-warning');
-        // } else if (totalHours >= 24) {
-        //     progressBar.removeClass('bg-danger bg-warning bg-info bg-secondary bg-success bg-light')
-        //         .addClass('bg-secondary');
-        // } else if (totalHours >= 16) {
-        //     progressBar.removeClass('bg-danger bg-warning bg-info bg-secondary bg-success bg-light')
-        //         .addClass('bg-info');
-        // } else if (totalHours >= 8) {
-        //     progressBar.removeClass('bg-danger bg-warning bg-info bg-secondary bg-success bg-light')
-        //         .addClass('bg-danger');
-        // } else {
-        //     progressBar.removeClass('bg-danger bg-warning bg-info bg-secondary bg-success bg-light')
-        //         .addClass('bg-light');
-        // }
-        // First, check if the theme is dark or light
         const isDarkMode = $('html').attr('data-theme') === 'dark' ||
             $('body').hasClass('dark') ||
             $('[data-theme="dark"]').length > 0;
@@ -342,11 +327,118 @@ async function initializeTimesheet(page, content, initialDate) {
         }
     };
 
+    // const generateEntryRow = (entry) => {
+    //     const rowId = `row_${Date.now()}`;
+    //     let holidayHoursSet = {};
+
+    //     // Keep track of which holidays already have hours set
+    //     $('#timesheet-entries tr').not('.add-row-container').each(function () {
+    //         $(this).find('.day-hours[data-is-holiday="true"]').each(function () {
+    //             let date = $(this).data('date');
+    //             if (parseFloat($(this).val() || $(this).attr('value')) > 0) {
+    //                 holidayHoursSet[date] = true;
+    //             }
+    //         });
+    //     });
+
+    //     return `
+    //         <tr data-date="${entry.date}" data-task="${entry.task}" data-row-id="${rowId}">
+    //             <td>
+    //                 <div class="project-cell">
+    //                     <div class="task-name">
+    //                         <div class="task-input-container" data-row="${rowId}"></div>
+    //                     </div>
+    //                 </div>
+    //             </td>
+    //             ${Array.from({ length: 7 }, (_, i) => {
+    //         let dayDate = moment(entry.date).clone().startOf('isoWeek').add(i, 'days');
+    //         let dateStr = dayDate.format('YYYY-MM-DD');
+    //         let isDayHoliday = holidays[dateStr] && !is_weekend(dayDate);
+    //         let isWeekend = is_weekend(dayDate);
+
+    //         let comment = isDayHoliday ? holidays[dateStr] : (isWeekend ? "Week Off" : "");
+
+    //         // Initialize hours to 0
+
+    //         let hours = null;
+
+    //         // Only set hours if there are existing entries
+    //         if (entry.entries && entry.entries[dateStr]) {
+    //             hours = entry.entries[dateStr].hours || null;
+    //         } else if (isDayHoliday && !holidayHoursSet[dateStr]) {
+    //             hours = 8;
+    //             holidayHoursSet[dateStr] = true;
+    //         }
+
+    //         comment = entry.entries?.[dateStr]?.comment || comment;
+
+    //         return `
+    //                     <td class="${isDayHoliday || isWeekend ? 'weekend' : ''}">
+    //                         <div class="day-cell">
+    //                             ${isDayHoliday || isWeekend ? `
+    //                                 <div class="text-muted text-center holiday-text">${comment} 
+    //                                 </div>
+    //                                 <input type="hidden"
+    //                                     class="form-control text-center day-hours"
+    //                                     data-date="${dateStr}"
+    //                                     value="${hours}"
+    //                                     data-is-holiday="${isDayHoliday}"
+    //                                     readonly>
+    //                             ` : `
+    //                                 <input type="number"
+    //                                     placeholder="0:00"
+    //                                     class="form-control text-center day-hours"
+    //                                     data-date="${dateStr}"
+    //                                     value="${hours}"
+    //                                     min="0" max="24"
+    //                                     step="1">
+    //                                 <input type="text"
+    //                                     class="form-control comment-input"
+    //                                     placeholder="Add comment"
+    //                                     value="${frappe.utils.escape_html(comment)}">
+    //                             `}
+    //                         </div>
+    //                     </td>
+    //                 `;
+    //     }).join('')}
+    //             <td class="text-center row-total">0.00</td>
+    //         </tr>
+    //     `;
+    // };
+
+    $(document).ready(function () {
+        updateTimesheetHeaders(); // Ensure headers are updated when the page loads
+    });
+
+    function updateTimesheetHeaders() {
+        for (let i = 0; i < 7; i++) {
+            let day = weekStart.clone().add(i, 'days');
+            let dateStr = day.format('YYYY-MM-DD');
+            let isWeekend = is_weekend(day);
+            let isHoliday = holidays && holidays.hasOwnProperty(dateStr) && !isWeekend;
+
+            let $header = $('.timesheet-grid th').eq(i + 1);
+
+            console.log(`Day: ${dateStr}, Holiday: ${isHoliday}, Weekend: ${isWeekend}`);
+
+            if ($header.length) {
+                $header.html(`
+                    <div class="day-header ${isWeekend ? 'weekend' : ''} ${isHoliday ? 'holiday' : ''}">
+                    ${day.format('ddd')} ${isHoliday ? '☂️' : ''}
+                    <div class="text-muted small">${day.format('MMM DD')}</div>
+                    </div>
+                `);
+            } else {
+                console.error("Header not found for index:", i + 1);
+            }
+        }
+    }
+
     const generateEntryRow = (entry) => {
         const rowId = `row_${Date.now()}`;
         let holidayHoursSet = {};
 
-        // Keep track of which holidays already have hours set
+        // Track which holidays already have hours set
         $('#timesheet-entries tr').not('.add-row-container').each(function () {
             $(this).find('.day-hours[data-is-holiday="true"]').each(function () {
                 let date = $(this).data('date');
@@ -374,18 +466,37 @@ async function initializeTimesheet(page, content, initialDate) {
             let comment = isDayHoliday ? holidays[dateStr] : (isWeekend ? "Week Off" : "");
 
             // Initialize hours to 0
-
-            let hours = 0;
+            let hours = null;
 
             // Only set hours if there are existing entries
             if (entry.entries && entry.entries[dateStr]) {
-                hours = entry.entries[dateStr].hours || 0;
+                hours = entry.entries[dateStr].hours || null;
             } else if (isDayHoliday && !holidayHoursSet[dateStr]) {
                 hours = 8;
                 holidayHoursSet[dateStr] = true;
             }
 
             comment = entry.entries?.[dateStr]?.comment || comment;
+
+            // Add umbrella icon for holidays in the header
+            $(document).ready(function () {
+                $.getScript("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/js/all.min.js", function () {
+                    let $header = $('.timesheet-grid th').eq(i + 1);
+                    if (isDayHoliday) {
+                        $header.html(`
+                            ${dayDate.format('ddd')} 
+                            <span class="holiday-tooltip">
+                                <i class="fa-solid fa-umbrella-beach"></i>
+                                <span class="tooltip-text">Holiday</span>
+                            </span> 
+                            <br>
+                            <div class="text-muted small">${dayDate.format('MMM DD')}</div>            
+                        `);
+                    }                    
+                });
+            });
+
+
 
             return `
                         <td class="${isDayHoliday || isWeekend ? 'weekend' : ''}">
@@ -400,6 +511,7 @@ async function initializeTimesheet(page, content, initialDate) {
                                         readonly>
                                 ` : `
                                     <input type="number"
+                                        placeholder="0:00"
                                         class="form-control text-center day-hours"
                                         data-date="${dateStr}"
                                         value="${hours}"
@@ -547,9 +659,9 @@ async function initializeTimesheet(page, content, initialDate) {
             let day = weekStart.clone().add(i, 'days');
             let $header = $('.timesheet-grid th').eq(i + 1);
             $header.html(`
-                ${day.format('ddd')}<br>
-                <div class="text-muted small">${day.format('MMM DD')}</div>
-            `);
+                    ${day.format('ddd')}<br>
+                    <div class="text-muted small">${day.format('MMM DD')}</div>
+                `);
             if (is_weekend(day)) {
                 $header.addClass('weekend');
             }
@@ -1551,29 +1663,12 @@ async function initializeTimesheet(page, content, initialDate) {
         });
     };
 
-    // Add view history button
-    const addHistoryButton = () => {
-        page.add_menu_item('View History', () => {
-            frappe.call({
-                method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.get_timesheet_history',
-                args: {
-                    employee: frappe.defaults.get_user_default("Employee")
-                },
-                callback: (r) => {
-                    if (r.message) {
-                        showHistoryDialog(r.message);
-                    }
-                }
-            });
-        });
-    };
-
     // Add handler for add row button
     content.on('click', '.add-row', function () {
         let $tbody = $('#timesheet-entries');
         let newRow = generateEntryRow({
             date: timesheetApp.currentDate.format('YYYY-MM-DD'),
-            weekday: timesheetApp.currentDate.format('dddd'),
+            weekday: timesheetApp.currentDate.format('ddd'),
             entries: {} // Empty entries object for new row
         });
         let $newRow = $(newRow);
@@ -1593,11 +1688,6 @@ async function initializeTimesheet(page, content, initialDate) {
     // Initialize everything at once
     $(document).ready(function () {
         fetchEmployeeInfo();
-        // initializeDatePicker();
-        // Remove the populateTasks call
-        // frappe.after_ajax(() => {
-        //     populateTasks();
-        // });
 
         // Update save button handler
         content.on('click', '.btn-save', function () {
