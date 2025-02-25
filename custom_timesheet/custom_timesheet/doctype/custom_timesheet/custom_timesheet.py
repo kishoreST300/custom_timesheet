@@ -7,7 +7,7 @@ from frappe.permissions import has_permission
 class CustomTimesheet(Document):
     def before_load(self):
         """Set correct status before loading"""
-        if self.docstatus == 0 and not self.is_new():
+        if self.docstatus == 0:
             self.status = "Saved"
             self.db_set('status', 'Saved', update_modified=False)
             frappe.db.commit()
@@ -58,17 +58,35 @@ class CustomTimesheet(Document):
         has_valid_entry = False
         missing_descriptions = []
 
+        # Get holiday list
+        holidays = {}
+        holiday_list = frappe.db.sql("""
+            SELECT holiday_date, description
+            FROM `tabHoliday`
+            WHERE parent = 'Holiday List'
+            AND holiday_date BETWEEN %s AND %s
+        """, (self.week_start, self.week_end), as_dict=1)
+        
+        for holiday in holiday_list:
+            holidays[str(holiday.holiday_date)] = holiday.description
+
         for entry in self.daily_entries:
-            if entry.hours > 0:  # Only check entries with hours
+            if entry.hours > 0:
+                is_holiday = str(entry.date) in holidays
+                
+                # For holidays, automatically set description and consider it valid
+                if is_holiday:
+                    entry.description = holidays[str(entry.date)]
+                    has_valid_entry = True
+                    continue
+                    
+                # For non-holidays, validate description
                 if entry.description:
                     has_valid_entry = True
                 else:
                     missing_descriptions.append(
                         f"{frappe.utils.formatdate(entry.date)} ({entry.hours} hours)"
                     )
-            else:
-                # For entries with 0 hours, description is optional
-                entry.description = entry.description or ""  # Set empty string if None
 
         if not has_valid_entry:
             frappe.throw(
@@ -76,13 +94,7 @@ class CustomTimesheet(Document):
                 title=_("Missing Entry")
             )
 
-        if missing_descriptions:
-            frappe.throw(
-                _("Please add descriptions for the following entries:<br>{0}").format(
-                    "<br>".join(missing_descriptions)
-                ),
-                title=_("Missing Descriptions")
-            )
+        
 
         if self.is_new():
             self.status = "Saved"
@@ -109,18 +121,15 @@ class CustomTimesheet(Document):
             self.status = "Cancelled"
 
     def before_save(self):
-        """Update status before saving"""
-        frappe.logger().debug(f"Before save for timesheet: {self.name}, Status: {self.status}")
-        if self.docstatus == 0:  # Only for draft documents
-            if self.is_new():
-                self.status = "Saved"
-            else:
-                # Always set to Saved for non-new documents
-                self.status = "Saved"
-                # Force update the status in the database
-                frappe.db.set_value(self.doctype, self.name, 'status', 'Saved', update_modified=False)
-                frappe.db.commit()
-        frappe.logger().debug(f"After setting status in before_save: {self.status}")
+        """Force Saved status"""
+        if self.docstatus == 0:
+            self.status = "Saved"
+            
+    def after_save(self):
+        """Ensure status is saved in database"""
+        if self.docstatus == 0:
+            frappe.db.set_value(self.doctype, self.name, 'status', 'Saved', update_modified=False)
+            frappe.db.commit()
 
     def before_submit(self):
         """Ensure selected_date is set before submission"""
@@ -245,9 +254,10 @@ class CustomTimesheet(Document):
     def calculate_total_hours(self):
         """Calculate total hours from entries"""
         total = 0
-        if hasattr(self, 'daily_entries') and self.daily_entries:
-            total = sum((entry.hours or 0) for entry in self.daily_entries)
+        if self.daily_entries:
+            total = sum(float(entry.hours or 0) for entry in self.daily_entries)
         self.total_hours = total
+        self.db_set('total_hours', total, update_modified=False)
         return total
 
     def set_reporting_manager(self):
@@ -292,10 +302,26 @@ class CustomTimesheet(Document):
         super(CustomTimesheet, self).submit()
 
     def save(self, *args, **kwargs):
-        """Override save to ensure status is set"""
+        """Override save to ensure status is set and holiday descriptions are preserved"""
         frappe.logger().debug(f"Saving timesheet: {self.name}, Status before: {self.status}")
+        
+        # Get holiday list
+        holidays = {str(h.holiday_date): h.description for h in frappe.db.sql("""
+            SELECT holiday_date, description FROM `tabHoliday`
+            WHERE parent = 'Holiday List' 
+            AND holiday_date BETWEEN %s AND %s
+        """, (self.week_start, self.week_end), as_dict=1)}
+        
+        # Set holiday descriptions for entries
+        for entry in self.daily_entries:
+            date_str = str(entry.date)
+            if date_str in holidays:
+                entry.description = holidays[date_str]
+        
         if not self.is_new() and self.docstatus == 0:
             self.status = "Saved"
+        
+        self.calculate_total_hours()  # Calculate before saving
         super(CustomTimesheet, self).save(*args, **kwargs)
         
         # Force update after save
@@ -431,6 +457,7 @@ def save_timesheet_entry(week_start, entries, employee):
         if not entries:
             frappe.throw(_("No entries provided"))
 
+        # Get existing timesheet if available
         existing = frappe.db.get_value(
             "Custom Timesheet",
             {
@@ -448,10 +475,7 @@ def save_timesheet_entry(week_start, entries, employee):
             timesheet = frappe.get_doc("Custom Timesheet", existing.name)
             if timesheet.docstatus == 1:
                 frappe.throw(_("Cannot modify submitted timesheet"))
-            timesheet.status = "Saved"  # Force status to Saved
-
-            # Ensure we are not adding duplicate entries
-            existing_entries = {(d.date, d.task) for d in timesheet.daily_entries}
+            timesheet.status = "Saved"
             timesheet.set("daily_entries", [])  # Clear existing entries only once
         else:
             timesheet = frappe.new_doc("Custom Timesheet")
@@ -459,45 +483,57 @@ def save_timesheet_entry(week_start, entries, employee):
             timesheet.week_start = week_start
             timesheet.week_end = add_days(week_start, 6)
             timesheet.selected_date = week_start
-            timesheet.status = "Saved"  # Set initial status to Saved
-            existing_entries = set()  # No existing entries in a new timesheet
+            timesheet.status = "Saved"
 
         total_hours = 0
+
+        # Fetch holiday list for validation
+        holidays = {str(h.holiday_date): h.description for h in frappe.db.sql(
+            """
+            SELECT holiday_date, description FROM `tabHoliday`
+            WHERE parent = 'Holiday List' AND holiday_date BETWEEN %s AND %s
+            """,
+            (week_start, add_days(week_start, 6)), as_dict=1)}
+
+        has_valid_entry = False
+
         for entry in entries:
-            if not entry.get('task'): 
+            if not entry.get('task'):
                 continue
-            
+
             date = entry.get('date')
             task = entry.get('task')
             hours = float(entry.get('hours', 0))
-            if hours < 0: 
-                continue
-            
-            # Avoid duplicate entries
-            if (date, task) in existing_entries:
+            is_holiday = date in holidays
+
+            if hours < 0:
                 continue
 
+            description = holidays.get(date, entry.get('comment', ''))
+            
             timesheet.append("daily_entries", {
                 "date": date,
                 "task": task,
                 "hours": hours,
-                "description": entry.get('comment', ''),
+                "description": description,  # Auto-fill holiday description
                 "weekday": get_weekday(date)
             })
             total_hours += hours
+            has_valid_entry = True  # At least one valid entry found
+
+        if not has_valid_entry:
+            frappe.throw(_("Please add at least one valid time entry."))
 
         timesheet.total_hours = total_hours
         timesheet.flags.ignore_permissions = True
         timesheet.save()
         
-        # Force update status after save
-        frappe.db.set_value('Custom Timesheet', timesheet.name, 'status', 'Saved')
         frappe.db.commit()
 
         return {
             "status": "success",
             "timesheet": timesheet.name,
-            "message": "Timesheet saved successfully",
+            "message": "Timesheet saved successfully.",
             "data": {
                 "daily_entries": [
                     {
@@ -512,10 +548,10 @@ def save_timesheet_entry(week_start, entries, employee):
                 "total_hours": timesheet.total_hours
             }
         }
+
     except Exception as e:
         frappe.log_error(f"Error saving timesheet: {str(e)}", "Timesheet Save Error")
         return {"status": "error", "message": str(e)}
-
 
 
 
@@ -529,6 +565,7 @@ def cleanup_duplicate_timesheets(employee, week_start, current_timesheet):
         AND docstatus = 0
     """, (employee, week_start, current_timesheet))
     frappe.db.commit()
+
 
 @frappe.whitelist()
 def submit_timesheet(timesheet_name):
@@ -554,7 +591,20 @@ def submit_timesheet(timesheet_name):
         if timesheet.docstatus != 0:
             frappe.throw(_("Timesheet is already submitted"))
             
-        # Update status and submit
+        # Get holiday list and set descriptions
+        holidays = {str(h.holiday_date): h.description for h in frappe.db.sql("""
+            SELECT holiday_date, description 
+            FROM `tabHoliday`
+            WHERE parent = 'Holiday List' 
+            AND holiday_date BETWEEN %s AND %s
+        """, (timesheet.week_start, timesheet.week_end), as_dict=1)}
+            
+        # Update holiday descriptions
+        for entry in timesheet.daily_entries:
+            date_str = str(entry.date)
+            if date_str in holidays:
+                entry.db_set('description', holidays[date_str])
+        
         timesheet.status = "Submitted"
         timesheet.submit()
         

@@ -1,34 +1,55 @@
 frappe.listview_settings['Custom Timesheet'] = {
     get_indicator: function(doc) {
-        // Always return Saved for any document with docstatus 0
+        // Always force "Saved" status for docstatus 0
         if (doc.docstatus === 0) {
-            doc.status = 'Saved';
+            doc.status = 'Saved';  // Update the doc status
+            frappe.db.set_value('Custom Timesheet', doc.name, 'status', 'Saved');  // Update in database
             return ['Saved', 'blue', 'status,=,Saved'];
         }
-        
+
         const colors = {
             'Submitted': 'yellow',
             'Approved': 'green',
             'Cancelled': 'red'
         };
         
-        return [doc.status || 'Saved', colors[doc.status] || 'blue', 'status,=,' + (doc.status || 'Saved')];
+        return [__(doc.status), colors[doc.status] || 'blue', `status,=,${doc.status}`];
     },
 
     onload: function(listview) {
-        // Update all draft documents to show as Saved
-        listview.page.add_action_item(__('Refresh List'), function() {
-            listview.refresh();
-        });
+        // Force refresh to update all statuses
+        listview.refresh();
     },
 
     refresh: function(listview) {
-        // Force status update for all rows
-        listview.data.forEach(function(doc) {
-            if (doc.docstatus === 0) {
-                doc.status = 'Saved';
-            }
-        });
-        listview.render_list();
+        // Update all draft documents to show as Saved
+        if (listview.data) {
+            listview.data.forEach(function(doc) {
+                if (doc.docstatus === 0) {
+                    doc.status = 'Saved';
+                    // Update in database
+                    frappe.db.set_value('Custom Timesheet', doc.name, 'status', 'Saved');
+                }
+            });
+            
+            // Force render update
+            listview.render_list();
+        }
+
+        // Set up periodic refresh
+        if (!listview._status_refresh) {
+            listview._status_refresh = setInterval(() => {
+                listview.refresh();
+            }, 30000); // Refresh every 30 seconds
+        }
+    },
+
+    hide_name_column: true,
+
+    formatters: {
+        status: function(value) {
+            // Always show Saved for draft status
+            return value === 'Draft' ? __('Saved') : __(value);
+        }
     }
 };

@@ -39,26 +39,45 @@ frappe.ui.form.on('Custom Timesheet', {
             }
         });
 
-        // Add submit button for draft timesheets
+        // Add submit button for draft timesheets with week check
         if(frm.doc.docstatus === 0) {
-            frm.page.set_primary_action(__('Submit'), function() {
-                frappe.call({
-                    method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.submit_timesheet',
-                    args: {
-                        timesheet_name: frm.doc.name
-                    },
-                    callback: function(r) {
-                        if (r.message && r.message.status === "success") {
-                            frappe.show_alert({
-                                message: __('Timesheet submitted successfully'),
-                                indicator: 'green'
+            // Check for existing submitted timesheet for this week
+            frappe.call({
+                method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.check_existing_timesheet',
+                args: {
+                    employee: frm.doc.employee,
+                    week_start: frm.doc.week_start
+                },
+                callback: function(r) {
+                    if (!r.message.exists) {
+                        frm.page.set_primary_action(__('Submit'), function() {
+                            frappe.call({
+                                method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.submit_timesheet',
+                                args: {
+                                    timesheet_name: frm.doc.name
+                                },
+                                callback: function(r) {
+                                    if (r.message && r.message.status === "success") {
+                                        frappe.show_alert({
+                                            message: __('Timesheet submitted successfully'),
+                                            indicator: 'green'
+                                        });
+                                        frm.reload_doc();
+                                    } else if (r.message && r.message.status === "error") {
+                                        frappe.msgprint(r.message.message);
+                                    }
+                                }
                             });
-                            frm.reload_doc();
-                        } else if (r.message && r.message.status === "error") {
-                            frappe.msgprint(r.message.message);
-                        }
+                        });
+                    } else {
+                        // Remove submit button if timesheet already exists
+                        frm.page.clear_primary_action();
+                        frappe.show_alert({
+                            message: __('A timesheet for this week has already been submitted'),
+                            indicator: 'red'
+                        });
                     }
-                });
+                }
             });
         }
 
@@ -244,6 +263,16 @@ frappe.ui.form.on('Custom Timesheet', {
             }[frm.doc.status]);
         }
 
+        // Calculate and update total hours
+        let total = 0;
+        if (frm.doc.daily_entries) {
+            frm.doc.daily_entries.forEach(entry => {
+                total += flt(entry.hours || 0);
+            });
+        }
+        frm.set_value('total_hours', total);
+        frm.refresh_field('total_hours');
+
         // ...rest of existing refresh code...
     },
 
@@ -378,6 +407,37 @@ frappe.ui.form.on('Custom Timesheet', {
         // Update the indicator after saving
         frm.page.set_indicator(frm.doc.status, frappe.utils.guess_colour(frm.doc.status));
         frm.reload_doc(); // Reload to get latest status
+    },
+
+    daily_entries_on_form_rendered: function(frm) {
+        frm.doc.total_hours = 0;
+        if (frm.doc.daily_entries) {
+            frm.doc.daily_entries.forEach(entry => {
+                frm.doc.total_hours += entry.hours || 0;
+            });
+        }
+        frm.refresh_field('total_hours');
+    }
+});
+
+// Add child table trigger
+frappe.ui.form.on('Custom Timesheet Detail', {
+    hours: function(frm, cdt, cdn) {
+        let total = 0;
+        frm.doc.daily_entries.forEach(entry => {
+            total += flt(entry.hours || 0);
+        });
+        frm.set_value('total_hours', total);
+        frm.refresh_field('total_hours');
+    },
+    
+    daily_entries_remove: function(frm) {
+        let total = 0;
+        frm.doc.daily_entries.forEach(entry => {
+            total += flt(entry.hours || 0);
+        });
+        frm.set_value('total_hours', total);
+        frm.refresh_field('total_hours');
     }
 });
 

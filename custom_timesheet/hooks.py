@@ -12,6 +12,8 @@ doc_events = {
     }
 }
 
+
+
 # DocTypes to be registered
 doctype_js = {
     "Custom Timesheet": "custom_timesheet/doctype/custom_timesheet/custom_timesheet.js"
