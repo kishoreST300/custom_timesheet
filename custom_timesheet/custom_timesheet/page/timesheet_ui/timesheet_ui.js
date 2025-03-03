@@ -130,7 +130,7 @@ frappe.pages['timesheet-ui'].on_page_load = function (wrapper) {
         .timesheet-container { padding: 20px; }
         .project-cell { padding: 8px; }
         .project-actions { margin-top: 8px; }
-        .table input.form-control { border: none; background: transparent; }
+        .table input.form-control { border: 1px solid lightgray; background: white; }
         .totals-row { background-color: #f8f9fa; }
         .progress { background-color: #e9ecef; }
         .weekend { background-color: #f8f9fa; }
@@ -321,84 +321,6 @@ async function initializeTimesheet(page, content, initialDate) {
         }
     };
 
-    // const generateEntryRow = (entry) => {
-    //     const rowId = `row_${Date.now()}`;
-    //     let holidayHoursSet = {};
-
-    //     // Keep track of which holidays already have hours set
-    //     $('#timesheet-entries tr').not('.add-row-container').each(function () {
-    //         $(this).find('.day-hours[data-is-holiday="true"]').each(function () {
-    //             let date = $(this).data('date');
-    //             if (parseFloat($(this).val() || $(this).attr('value')) > 0) {
-    //                 holidayHoursSet[date] = true;
-    //             }
-    //         });
-    //     });
-
-    //     return `
-    //         <tr data-date="${entry.date}" data-task="${entry.task}" data-row-id="${rowId}">
-    //             <td>
-    //                 <div class="project-cell">
-    //                     <div class="task-name">
-    //                         <div class="task-input-container" data-row="${rowId}"></div>
-    //                     </div>
-    //                 </div>
-    //             </td>
-    //             ${Array.from({ length: 7 }, (_, i) => {
-    //         let dayDate = moment(entry.date).clone().startOf('isoWeek').add(i, 'days');
-    //         let dateStr = dayDate.format('YYYY-MM-DD');
-    //         let isDayHoliday = holidays[dateStr] && !is_weekend(dayDate);
-    //         let isWeekend = is_weekend(dayDate);
-
-    //         let comment = isDayHoliday ? holidays[dateStr] : (isWeekend ? "Week Off" : "");
-
-    //         // Initialize hours to 0
-
-    //         let hours = null;
-
-    //         // Only set hours if there are existing entries
-    //         if (entry.entries && entry.entries[dateStr]) {
-    //             hours = entry.entries[dateStr].hours || null;
-    //         } else if (isDayHoliday && !holidayHoursSet[dateStr]) {
-    //             hours = 8;
-    //             holidayHoursSet[dateStr] = true;
-    //         }
-
-    //         comment = entry.entries?.[dateStr]?.comment || comment;
-
-    //         return `
-    //                     <td class="${isDayHoliday || isWeekend ? 'weekend' : ''}">
-    //                         <div class="day-cell">
-    //                             ${isDayHoliday || isWeekend ? `
-    //                                 <div class="text-muted text-center holiday-text">${comment} 
-    //                                 </div>
-    //                                 <input type="hidden"
-    //                                     class="form-control text-center day-hours"
-    //                                     data-date="${dateStr}"
-    //                                     value="${hours}"
-    //                                     data-is-holiday="${isDayHoliday}"
-    //                                     readonly>
-    //                             ` : `
-    //                                 <input type="number"
-    //                                     placeholder="0:00"
-    //                                     class="form-control text-center day-hours"
-    //                                     data-date="${dateStr}"
-    //                                     value="${hours}"
-    //                                     min="0" max="24"
-    //                                     step="1">
-    //                                 <input type="text"
-    //                                     class="form-control comment-input"
-    //                                     placeholder="Add comment"
-    //                                     value="${frappe.utils.escape_html(comment)}">
-    //                             `}
-    //                         </div>
-    //                     </td>
-    //                 `;
-    //     }).join('')}
-    //             <td class="text-center row-total">0.00</td>
-    //         </tr>
-    //     `;
-    // };
 
     $(document).ready(function () {
         updateTimesheetHeaders(); // Ensure headers are updated when the page loads
@@ -431,7 +353,7 @@ async function initializeTimesheet(page, content, initialDate) {
     const generateEntryRow = (entry) => {
         const rowId = `row_${Date.now()}`;
         let holidayHoursSet = {};
-
+    
         // Track which holidays already have hours set
         $('#timesheet-entries tr').not('.add-row-container').each(function () {
             $(this).find('.day-hours[data-is-holiday="true"]').each(function () {
@@ -441,13 +363,16 @@ async function initializeTimesheet(page, content, initialDate) {
                 }
             });
         });
-
+    
         return `
             <tr data-date="${entry.date}" data-task="${entry.task}" data-row-id="${rowId}">
                 <td>
                     <div class="project-cell">
                         <div class="task-name">
                             <div class="task-input-container" data-row="${rowId}"></div>
+                            <button class="btn btn-danger delete-row" data-row-id="${rowId}">
+                            <i class="fa fa-trash" aria-hidden="true"></i>
+                            </button>
                         </div>
                     </div>
                 </td>
@@ -456,12 +381,12 @@ async function initializeTimesheet(page, content, initialDate) {
             let dateStr = dayDate.format('YYYY-MM-DD');
             let isDayHoliday = holidays[dateStr] && !is_weekend(dayDate);
             let isWeekend = is_weekend(dayDate);
-
+    
             let comment = isDayHoliday ? holidays[dateStr] : (isWeekend ? "Week Off" : "");
-
+    
             // Initialize hours to 0
             let hours = null;
-
+    
             // Only set hours if there are existing entries
             if (entry.entries && entry.entries[dateStr]) {
                 hours = entry.entries[dateStr].hours || null;
@@ -469,9 +394,9 @@ async function initializeTimesheet(page, content, initialDate) {
                 hours = 8;
                 holidayHoursSet[dateStr] = true;
             }
-
+    
             comment = entry.entries?.[dateStr]?.comment || comment;
-
+    
             // Add umbrella icon for holidays in the header
             $(document).ready(function () {
                 $.getScript("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/js/all.min.js", function () {
@@ -489,9 +414,7 @@ async function initializeTimesheet(page, content, initialDate) {
                     }                    
                 });
             });
-
-
-
+    
             return `
                         <td class="${isDayHoliday || isWeekend ? 'weekend' : ''}">
                             <div class="day-cell">
@@ -524,6 +447,31 @@ async function initializeTimesheet(page, content, initialDate) {
             </tr>
         `;
     };
+    
+    // Attach event listener for delete button
+    // $(document).on("click", ".delete-row", function () {
+    //     $(this).closest("tr").remove();
+    // });
+    $(document).on('click', '.delete-row', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        let $row = $(this).closest('tr');
+        
+        // Show confirmation dialog
+        frappe.confirm(
+            __('Are you sure you want to delete this row?'),
+            function() {
+                // On confirm
+                $row.fadeOut(400, function() {
+                    $(this).remove();
+                    updateTotals(); 
+                });
+            }
+        );
+    });
+    
+    
 
 
     const fetchEmployeeInfo = () => {
@@ -1445,47 +1393,8 @@ async function initializeTimesheet(page, content, initialDate) {
         saveTimesheet();
     });
 
-    content.on('click', '.btn-primary, .btn-danger', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        if ($(this).hasClass('btn-primary')) {
-            submitTimesheet();
-        } else if ($(this).hasClass('btn-danger')) {
-            frappe.confirm(
-                __('Are you sure you want to cancel this timesheet?'),
-                function () {
-                    frappe.call({
-                        method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.cancel_timesheet',
-                        args: {
-                            timesheet_name: currentTimesheet
-                        },
-                        callback: function (r) {
-                            if (r.message && r.message.status === "success") {
-                                frappe.show_alert({
-                                    message: __('Timesheet cancelled successfully'),
-                                    indicator: 'red'
-                                });
-
-                                // Reset UI state
-                                currentTimesheet = null;
-                                $('.btn-danger')
-                                    .removeClass('btn-danger')
-                                    .addClass('btn-primary')
-                                    .text('Submit');
-                                $('.btn-save').show();
-
-                                // Reload the data
-                                loadTimesheetData();
-                            } else {
-                                frappe.msgprint(__('Could not cancel timesheet'));
-                            }
-                        }
-                    });
-                }
-            );
-        }
-    });
+  
+    
 
     // Add status indicator HTML after summary section
     const addStatusIndicator = () => {
@@ -1621,124 +1530,9 @@ const isManager = (employeeId) => {
     });
 };
 
+// Replace the existing delete row event handler with this new one
 
 
-const showCancelDialog = () => {
-    if (!currentTimesheet) {
-        frappe.throw(__('No timesheet to cancel'));
-        return;
-    }
-
-    let d = new frappe.ui.Dialog({
-        title: __('Cancel Timesheet'),
-        fields: [{
-            label: __('Cancellation Comment'),
-            fieldname: 'comment',
-            fieldtype: 'Small Text',
-            reqd: 1
-        }],
-        primary_action_label: __('Cancel Timesheet'),
-        primary_action(values) {
-            frappe.call({
-                method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.cancel_timesheet',
-                args: {
-                    timesheet_name: currentTimesheet,
-                    comment: values.comment
-                },
-                callback: function (r) {
-                    if (r.message && r.message.status === "success") {
-                        d.hide();
-                        frappe.show_alert({
-                            message: __('Timesheet cancelled successfully'),
-                            indicator: 'red'
-                        }, 3);
-
-                        // Show cancellation info
-                        showCancellationInfo(r.message.timesheet);
-
-                        // Reload the timesheet data
-                        loadTimesheetData();
-                    } else {
-                        frappe.msgprint(__(r.message?.message || 'Could not cancel timesheet'));
-                    }
-                }
-            });
-        }
-    });
-    d.show();
-};
-
-const showCancellationInfo = (timesheet) => {
-    let html = `
-        <div class="alert alert-danger">
-            <div class="font-weight-bold">Cancelled by: ${timesheet.cancelled_by_name || ''}</div>
-            <div class="text-muted">On: ${frappe.datetime.str_to_user(timesheet.cancelled_on)}</div>
-            <div class="mt-2">Comment: ${timesheet.cancellation_comment || ''}</div>
-        </div>
-    `;
-
-    $('.cancellation-info').remove();
-    $(html).addClass('cancellation-info mb-4').insertAfter('.summary-section');
-};
-
-frappe.ui.form.on('Custom Timesheet', {
-    refresh: function (frm) {
-        // ...existing code for fetching employee details, approve button, etc...
-
-        // Modify the cancel button action to prompt for a cancellation comment
-        if (frm.doc.docstatus === 1 && frm.doc.status !== "Cancelled") {
-            frm.add_custom_button(__('Cancel'), function () {
-                frappe.prompt([
-                    {
-                        fieldname: 'comment',
-                        label: __('Cancellation Comment'),
-                        fieldtype: 'Small Text',
-                        reqd: 1
-                    }
-                ],
-                    function (values) {
-                        frappe.call({
-                            method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.cancel_timesheet',
-                            args: {
-                                timesheet_name: frm.doc.name,
-                                comment: values.comment
-                            },
-                            callback: function (r) {
-                                if (r.message && r.message.status === "success") {
-                                    frappe.show_alert({
-                                        message: __('Timesheet cancelled successfully'),
-                                        indicator: 'green'
-                                    });
-                                    frm.reload_doc();
-                                } else {
-                                    frappe.msgprint(r.message.message);
-                                }
-                            }
-                        });
-                    },
-                    __('Cancel Timesheet'),
-                    __('Submit'));
-            }, __('Actions'));
-        }
-
-        // Display cancellation details if timesheet is cancelled
-        if (frm.doc.status === "Cancelled") {
-            frm.remove_custom_button('Cancel');
-            frm.dashboard.clear_headline();
-            frm.dashboard.add_indicator(__("Cancelled"), "red");
-            if (frm.doc.cancelled_by && frm.doc.cancelled_on) {
-                frm.dashboard.add_comment(__("Cancelled by {0} on {1}. Reason: {2}", [
-                    frappe.bold(frm.doc.cancelled_by_name || frm.doc.cancelled_by),
-                    frappe.datetime.str_to_user(frm.doc.cancelled_on),
-                    frm.doc.cancellation_comment || __("No comment")
-                ]));
-            }
-        }
-
-        // ...existing code...
-    },
-    // ...existing event handlers...
-});
 
 
 
