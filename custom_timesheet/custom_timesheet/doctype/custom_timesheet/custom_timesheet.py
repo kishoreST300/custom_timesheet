@@ -1089,3 +1089,58 @@ def check_manager_permission(employee):
         }
 
 # ...rest of existing code...
+from datetime import datetime, timedelta
+
+@frappe.whitelist()
+def get_employee_leaves(employee, start_date, end_date):
+    """Get approved leave applications for an employee within a date range"""
+    try:
+        # Convert string dates to date objects if needed
+        start_date = getdate(start_date)
+        end_date = getdate(end_date)
+
+        # Debug log
+        frappe.logger().debug(f"Fetching leaves for employee {employee} from {start_date} to {end_date}")
+
+        # Fetch approved leaves with a simpler query first
+        leaves = frappe.get_all(
+            "Leave Application",
+            filters={
+                "employee": employee,
+                "status": "Approved",
+                "docstatus": 1,
+                "from_date": ["<=", end_date],
+                "to_date": [">=", start_date]
+            },
+            fields=["name", "leave_type", "from_date", "to_date", "status"]
+        )
+
+        # Debug log
+        frappe.logger().debug(f"Found {len(leaves)} leave applications")
+
+        # Generate day-wise leave entries
+        daily_leaves = []
+        for leave in leaves:
+            current_date = max(getdate(leave.from_date), start_date)
+            end_leave_date = min(getdate(leave.to_date), end_date)
+            
+            while current_date <= end_leave_date:
+                daily_leave = {
+                    "leave_date": str(current_date),  # Convert to string for JSON serialization
+                    "leave_type": leave.leave_type,
+                    "status": leave.status,
+                    "is_leave": True
+                }
+                daily_leaves.append(daily_leave)
+                current_date += timedelta(days=1)
+
+                # Debug log for each generated entry
+                frappe.logger().debug(f"Generated leave entry: {daily_leave}")
+
+        return daily_leaves
+
+    except Exception as e:
+        frappe.logger().error(f"Error in get_employee_leaves: {str(e)}\n{frappe.get_traceback()}")
+        return []
+
+# ...rest of existing code...

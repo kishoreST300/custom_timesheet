@@ -391,3 +391,6 @@ body[data-path="login"] .navbar-container,
     visibility: visible;
     opacity: 1;
 }
+.delete-row{
+    padding: 100px;
+}
