@@ -18,7 +18,7 @@ frappe.pages['timesheet-ui'].on_page_load = function (wrapper) {
     const isLeave = (date) => {
         return leaves && leaves.hasOwnProperty(date);
     };
-    
+
 
     const renderTimesheet = () => {
         let weekStart = currentDate.clone().startOf('isoWeek');
@@ -270,12 +270,12 @@ async function initializeTimesheet(page, content, initialDate) {
     if (typeof leaves === "undefined") {
         console.error("Error: leaves object is not defined.");
     }
-    
+
 
     const updateTotals = () => {
         let totalHours = 0;
         let holidayHoursCounted = {}; // Track which holidays have been counted
-    
+
         $('.timesheet-grid tr').not('.add-row-container').each(function () {
             let rowTotal = 0;
             $(this).find('.day-hours').each(function () {
@@ -284,10 +284,10 @@ async function initializeTimesheet(page, content, initialDate) {
                 let isHolidayDay = holidays && holidays.hasOwnProperty(date) && !is_weekend(moment(date));
                 let isLeaveDay = leaves && leaves.hasOwnProperty(date); // Fix: Direct check
                 let isWeekend = is_weekend(moment(date));
-    
+
                 let hours = parseFloat($cell.val() || $cell.attr('value')) || 0;
 
-    
+
                 // Only count holiday or leave hours once per date
                 if ((isHolidayDay || isLeaveDay) && !holidayHoursCounted[date]) {
                     holidayHoursCounted[date] = true;
@@ -298,25 +298,25 @@ async function initializeTimesheet(page, content, initialDate) {
                     totalHours += hours;
                 }
             });
-    
+
             $(this).find('.row-total').text(rowTotal.toFixed(2));
         });
-    
+
         // Update summary section
         $('.total-hours').text(totalHours.toFixed(2));
-    
+
         // Update progress bar
         let progressPercentage = (totalHours / 40) * 100;
         let progressBar = $('.progress-bar');
         progressBar.css('width', `${Math.min(progressPercentage, 100)}%`);
-    
+
         const isDarkMode = $('html').attr('data-theme') === 'dark' ||
             $('body').hasClass('dark') ||
             $('[data-theme="dark"]').length > 0;
-    
+
         // Remove all existing bg classes
         progressBar.removeClass('bg-danger bg-warning bg-info bg-secondary bg-success bg-light bg-primary bg-dark');
-    
+
         // Apply appropriate color based on theme and hours
         if (totalHours >= 40) {
             progressBar.addClass('bg-success');
@@ -332,7 +332,7 @@ async function initializeTimesheet(page, content, initialDate) {
             progressBar.addClass(isDarkMode ? 'bg-dark' : 'bg-light');
         }
     };
-    
+
 
 
 
@@ -368,21 +368,21 @@ async function initializeTimesheet(page, content, initialDate) {
     // }
     function updateTimesheetHeaders() {
         let weekStart = timesheetApp.currentDate.clone().startOf('isoWeek');
-    
+
         console.log("Leaves Object:", leaves); // Debugging
         console.log("Holidays Object:", holidays); // Debugging
-    
+
         for (let i = 0; i < 7; i++) {
             let day = weekStart.clone().add(i, 'days');
             let dateStr = day.format('YYYY-MM-DD');
             let isWeekend = is_weekend(day);
             let isHoliday = holidays && holidays.hasOwnProperty(dateStr) && !isWeekend;
             let isLeave = leaves && leaves.hasOwnProperty(dateStr); // Fix: Ensure leaves is valid
-    
+
             console.log(`Checking leave for date: ${dateStr}, Exists in leaves?`, isLeave); // Debugging
-    
+
             let $header = $('.timesheet-grid th').eq(i + 1);
-    
+
             if ($header.length) {
                 $header.html(`
                     <div class="day-header ${isWeekend ? 'weekend' : ''} ${isHoliday ? 'holiday' : ''} ${isLeave ? 'leave' : ''}">
@@ -395,17 +395,17 @@ async function initializeTimesheet(page, content, initialDate) {
             }
         }
     }
-    
+
     // Ensure leaves are loaded before updating headers
     if (!leaves || Object.keys(leaves).length === 0) {
         console.warn("Leaves data not loaded yet.");
     } else {
         updateTimesheetHeaders();
-    }   
+    }
     const generateEntryRow = (entry) => {
         const rowId = `row_${Date.now()}`;
         let holidayHoursSet = {};
-
+    
         // Track which holidays already have hours set
         $('#timesheet-entries tr').not('.add-row-container').each(function () {
             $(this).find('.day-hours[data-is-holiday="true"]').each(function () {
@@ -415,7 +415,7 @@ async function initializeTimesheet(page, content, initialDate) {
                 }
             });
         });
-
+    
         return `
             <tr data-date="${entry.date}" data-task="${entry.task}" data-row-id="${rowId}">
                 <td>
@@ -431,18 +431,18 @@ async function initializeTimesheet(page, content, initialDate) {
                 ${Array.from({ length: 7 }, (_, i) => {
             let dayDate = moment(entry.date).clone().startOf('isoWeek').add(i, 'days');
             let dateStr = dayDate.format('YYYY-MM-DD');
-
+    
             let isDayHoliday = holidays && holidays.hasOwnProperty(dateStr) && !is_weekend(dayDate);
             let isDayLeave = leaves && leaves.hasOwnProperty(dateStr) ? leaves[dateStr] : null;
             let isWeekend = is_weekend(dayDate);
-
+    
             let comment = isDayHoliday ? holidays[dateStr] :
                 isDayLeave ? `${isDayLeave.type || "N/A"}` :
                     isWeekend ? "Week Off" : "";
-
+    
             // Initialize hours to 0
             let hours = null;
-
+    
             // Only set hours if there are existing entries
             if (entry.entries && entry.entries[dateStr]) {
                 hours = entry.entries[dateStr].hours || null;
@@ -450,34 +450,42 @@ async function initializeTimesheet(page, content, initialDate) {
                 hours = 8;
                 holidayHoursSet[dateStr] = true;
             }
-
+    
             comment = entry.entries?.[dateStr]?.comment || comment;
-
-            // Add umbrella icon for holidays in the header
+    
+            // Add icons for holidays and leaves in the header
             $(document).ready(function () {
-                $.getScript("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/js/all.min.js", function () {
-                    let $header = $('.timesheet-grid th').eq(i + 1);
-                    if (isDayHoliday) {
-                        $header.html(`
-                            ${dayDate.format('ddd')} 
-                            <span class="holiday-tooltip ml-2">
-                                <i class="fa-solid fa-umbrella-beach"></i>   
-                                <span class="tooltip-text">Holiday</span>
-                            </span> 
-                            <br>
-                            <div class="text-muted small">${dayDate.format('MMM DD')}</div>            
-                        `);
-                    }
-                });
+                let $header = $('.timesheet-grid th').eq(i + 1);
+                if (isDayHoliday) {
+                    $header.html(`
+                        ${dayDate.format('ddd')} 
+                        <span class="holiday-tooltip ml-2">
+                            <i class="fa-solid fa-umbrella-beach"></i>   
+                            <span class="tooltip-text">Holiday</span>
+                        </span> 
+                        <br>
+                        <div class="text-muted small">${dayDate.format('MMM DD')}</div>            
+                    `);
+                } else if (isDayLeave) {
+                    $header.html(`
+                        ${dayDate.format('ddd')} 
+                        <span class="leave-tooltip ml-2">
+                            <i class="fa fa-plane-departure plane-icon"></i>  
+                            <span class="tooltip-text">${isDayLeave.type || "N/A"}</span>
+                        </span> 
+                        <br>
+                        <div class="text-muted small">${dayDate.format('MMM DD')}</div>            
+                    `);
+                }
             });
-
+    
             return `
                         <td class="${isDayHoliday || isDayLeave || isWeekend ? 'weekend' : ''}">
                             <div class="day-cell">
                                 ${isDayHoliday || isDayLeave || isWeekend ? `
                                     <div class="text-muted text-center holiday-text">
                                         ${comment}
-                                        ${isDayLeave && isDayLeave.type ? `<i class="fa fa-calendar-minus-o ml-1" title="${isDayLeave.type}"></i>` : ''}
+                                        ${isDayLeave && isDayLeave.type ?  `` : ''}
                                     </div>
                                     <input type="hidden"
                                         class="form-control text-center day-hours"
@@ -1457,71 +1465,42 @@ async function initializeTimesheet(page, content, initialDate) {
         updateTotals();
     });
 
-    // content.on('change', '.day-hours', function () {
-    //     let $input = $(this);
-    //     let date = $input.data('date');
-    //     let isHolidayDay = holidays[date] && !is_weekend(moment(date));
-    //     let isLeaveDay = $input.data('is-leave') === 'true';
-    //     let isWeekend = is_weekend(moment(date));
-
-    //     if (isHolidayDay || isLeaveDay) {
-    //         $input.val(8);  // Force 8 hours for holidays and leaves
-    //         $input.prop('readonly', true);
-    //         updateTotals();
-    //         return false;
-    //     }
-
-    //     if (isWeekend) {
-    //         $input.val(0);
-    //         $input.prop('readonly', true);
-    //         updateTotals();
-    //         return false;
-    //     }
-
-    //     let hours = parseFloat($input.val()) || 0;
-    //     if (hours < 0 || hours > 24) {
-    //         frappe.throw(__('Hours must be between 0 and 24'));
-    //         $input.val(0);
-    //     }
-
-    //     updateTotals();
-    // });
 
     content.on('change', '.day-hours', function () {
-    let $input = $(this);
-    let date = $input.data('date');
-    
-    let dayMoment = moment(date);
-    let isWeekend = is_weekend(dayMoment);
-    let isHolidayDay = holidays && holidays.hasOwnProperty(date) && !isWeekend;
-    let isLeaveDay = leaves && leaves.hasOwnProperty(date);
+        let $input = $(this);
+        let date = $input.data('date');
 
-    console.log(`Date: ${date}, isHolidayDay: ${isHolidayDay}, isLeaveDay: ${isLeaveDay}, isWeekend: ${isWeekend}`);
+        let dayMoment = moment(date);
+        let isWeekend = is_weekend(dayMoment);
+        let isHolidayDay = holidays && holidays.hasOwnProperty(date) && !isWeekend;
+        let isLeaveDay = leaves && leaves.hasOwnProperty(date);
 
-    if (isHolidayDay || isLeaveDay) {
-        if (parseFloat($input.val()) !== 8) {  // Prevent unnecessary overwrites
-            $input.val(8);
+        console.log(`Date: ${date}, isHolidayDay: ${isHolidayDay}, isLeaveDay: ${isLeaveDay}, isWeekend: ${isWeekend}`);
+
+        if (isHolidayDay || isLeaveDay) {
+            if (parseFloat($input.val()) !== 8) {  // Prevent unnecessary overwrites
+                $input.val(8);
+            }
+            $input.prop('readonly', true);
+            updateTotals();
+            return false;
         }
-        $input.prop('readonly', true);
+
+        if (isWeekend) {
+            $input.val(0);
+            $input.prop('readonly', true);
+            updateTotals();
+            return false;
+        }
+
+        let hours = parseFloat($input.val()) || 0;
+        if (hours < 0 || hours > 24) {
+            frappe.throw(__('Hours must be between 0 and 24'));
+            $input.val(0);
+        }
+
         updateTotals();
-        return false;
-    }
-
-    if (isWeekend) {
-        $input.val(0);
-        $input.prop('readonly', true);
-        updateTotals();
-        return false;
-    }
-
-    let hours = parseFloat($input.val()) || 0;
-    if (hours < 0 || hours > 24) {
-        frappe.throw(__('Hours must be between 0 and 24'));
-        $input.val(0);
-    }
-
-    updateTotals();
-});
+    });
 
     const createNewRow = (task) => {
         let weekStart = timesheetApp.currentDate.clone().startOf('isoWeek').format('YYYY-MM-DD');
@@ -1605,6 +1584,9 @@ async function initializeTimesheet(page, content, initialDate) {
         saveTimesheet();
     });
 
+    content.on('click', '.btn-submit', function () {
+        submitTimesheet();
+    });
 
 
 

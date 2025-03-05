@@ -13,7 +13,8 @@ doc_events = {
 }
 
 app_include_css = [
-    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css",
+    "/assets/custom_timesheet/css/timeSheet.css?v=3.5",
 ]
 
 # DocTypes to be registered
@@ -29,7 +30,7 @@ doctype_list_js = {
 # Whitelisted methods
 whitelisted_methods = {
     "custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.get_employee_info": True,
-    "custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.approve_timesheet": True
+    "custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.approve_timesheet": True,
 }
 
 # Apps
@@ -263,4 +264,3 @@ has_permission = {}
 # default_log_clearing_doctypes = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
-

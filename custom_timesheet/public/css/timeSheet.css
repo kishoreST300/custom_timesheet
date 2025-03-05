@@ -251,7 +251,7 @@ body[data-path="login"] .navbar-container,
 
 .input-group,
 .form-control {
-    border-color: var(--input-border);
+    /* border-color: var(--input-border); */
 }
 
 .table-bordered th,
@@ -349,29 +349,31 @@ body[data-path="login"] .navbar-container,
     color: #e2e8f0;
 }
 /* Positioning the holiday tooltip */
+/* Holiday Tooltip */
 .holiday-tooltip {
     position: relative;
     display: inline-block;
     cursor: pointer;
 }
 
-/* The hidden tooltip text */
 .holiday-tooltip .tooltip-text {
     visibility: hidden;
     width: 80px;
-    background-color: #333;
+    background-color: rgba(51, 51, 51, 0.603); /* Slightly transparent for depth */
     color: #fff;
     text-align: center;
-    padding: 5px;
-    border-radius: 5px;
+    padding: 6px 8px;
+    border-radius: 6px;
     position: absolute;
-    bottom: 120%; /* Position above the icon */
+    bottom: 130%; /* Slightly more space above */
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-50%) scale(0.95); /* Initial scale for animation */
     opacity: 0;
-    transition: opacity 0.3s;
-    font-size: 12px;
+    transition: all 0.2s ease-in-out; /* Smooth transition for all changes */
+    font-size: 14px;
+    font-family: Arial, sans-serif; /* Cleaner font */
     white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Subtle shadow */
 }
 
 /* Tooltip arrow */
@@ -383,35 +385,63 @@ body[data-path="login"] .navbar-container,
     margin-left: -5px;
     border-width: 5px;
     border-style: solid;
-    border-color: #333 transparent transparent transparent;
+    border-color: rgba(51, 51, 51, 0.95) transparent transparent transparent;
 }
 
-/* Show tooltip when hovering over the icon */
+/* Hover effect with animation */
 .holiday-tooltip:hover .tooltip-text {
     visibility: visible;
     opacity: 1;
+    transform: translateX(-50%) scale(1); /* Pop-up effect */
 }
-.delete-row{
-    padding: 100px;
-}
+
+/* Leave Tooltip */
 .leave-tooltip {
     position: relative;
     display: inline-block;
+    cursor: pointer;
 }
+
 .leave-tooltip .tooltip-text {
     visibility: hidden;
-    background-color: #333;
+    background-color: rgba(51, 51, 51, 0.603);
     color: #fff;
     text-align: center;
-    border-radius: 4px;
-    padding: 5px;
+    border-radius: 6px;
+    padding: 6px 8px;
     position: absolute;
     z-index: 1;
-    bottom: 125%;
+    bottom: 130%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-50%) scale(0.95);
     white-space: nowrap;
+    opacity: 0;
+    transition: all 0.2s ease-in-out;
+    font-size: 14px;
+    font-family: Arial, sans-serif;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
+
+/* Hover effect with animation */
 .leave-tooltip:hover .tooltip-text {
     visibility: visible;
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+}
+
+/* Tooltip arrow for leave-tooltip */
+.leave-tooltip .tooltip-text::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: rgba(51, 51, 51, 0.95) transparent transparent transparent;
+}
+
+/* Delete row - assuming this is related */
+.delete-row {
+    padding: 100px; /* Kept as is, but consider if this is intentional */
 }
