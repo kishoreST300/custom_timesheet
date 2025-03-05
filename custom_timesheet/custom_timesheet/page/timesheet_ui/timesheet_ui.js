@@ -133,22 +133,44 @@ frappe.pages['timesheet-ui'].on_page_load = function (wrapper) {
     $('<style>')
         .prop('type', 'text/css')
         .html(`
-        .timesheet-container { padding: 20px; }
-        .project-cell { padding: 8px; }
-        .project-actions { margin-top: 8px; }
-        .table input.form-control { border: 1px solid lightgray; background: white; }
-        .totals-row { background-color: #f8f9fa; }
-        .progress { background-color: #e9ecef; }
-        .weekend { background-color: #f8f9fa; }
-        .day-cell { display: flex; flex-direction: column; }
-        .comment-input { 
-            margin-top: 5px; 
-            font-size: 12px; 
-            padding: 2px 5px;
-            border-top: 1px solid #eee;
+        /* Timesheet Container */
+        .timesheet-container {
+            padding: 20px;
         }
-        .task-selector-container { padding: 10px 0; }
-        .task-name { display: flex; justify-content: space-between; align-items: center; }
+
+        /* Table & Grid */
+        .table input.form-control {
+            background: white;
+        }
+        .totals-row,
+        .weekend {
+            background-color: #f8f9fa;
+        }
+        .progress {
+            background-color: #e9ecef;
+        }
+        .day-cell {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Project & Task Styles */
+        .project-cell {
+            padding: 8px;
+        }
+        .project-actions {
+            margin-top: 8px;
+        }
+        .task-selector-container {
+            padding: 10px 0;
+        }
+        .task-name {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Employee Info */
         .employee-info {
             background-color: #f8f9fa;
             padding: 15px;
@@ -160,7 +182,33 @@ frappe.pages['timesheet-ui'].on_page_load = function (wrapper) {
             margin-bottom: 2px;
         }
 
-        /* Dark mode styles */
+        /* Comments */
+        .comment-input {
+            margin-top: 5px;
+            font-size: 12px;
+            padding: 2px 5px;
+            border-top: 1px solid #eee;
+            background-color: #fff;
+            transition: background-color 0.3s ease-in-out;
+        }
+        .comment-display {
+            padding: 4px 8px;
+            margin-top: 4px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        /* Weekend & Holiday Styles */
+        .weekend .text-muted {
+            padding: 6px 0;
+            font-size: 0.9em;
+        }
+        .holiday-text {
+            padding: 8px 0;
+            font-weight: 500;
+        }
+
+        /* Dark Mode Styles */
         [data-theme="dark"] .timesheet-container {
             background-color: var(--bg-color);
             color: #ffffff;
@@ -183,6 +231,7 @@ frappe.pages['timesheet-ui'].on_page_load = function (wrapper) {
             background-color: var(--fg-color);
             color: #ffffff;
             border-color: #3e4959;
+            transition: background-color 0.3s ease-in-out;
         }
         [data-theme="dark"] .btn-default:hover {
             background-color: var(--bg-color);
@@ -209,21 +258,15 @@ frappe.pages['timesheet-ui'].on_page_load = function (wrapper) {
             border-color: #3e4959 !important;
         }
 
-        /* Additional Styles */
-        .weekend .text-muted {
-            padding: 6px 0;
-            font-size: 0.9em;
-        }
+        /* Dark Mode Weekend & Holiday Text */
         [data-theme="dark"] .weekend .text-muted {
             color: var(--gray-500) !important;
-        }
-        .holiday-text {
-            padding: 8px 0;
-            font-weight: 500;
         }
         [data-theme="dark"] .holiday-text {
             color: var(--gray-400) !important;
         }
+
+        /* Progress Bar Enhancements */
         .progress-bar {
             transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out;
         }
@@ -240,6 +283,7 @@ frappe.pages['timesheet-ui'].on_page_load = function (wrapper) {
             background-color: #00bcd4 !important;
         }
     `).appendTo('head');
+
 
     $('.btn-submit').attr('data-week');
 
@@ -333,39 +377,6 @@ async function initializeTimesheet(page, content, initialDate) {
         }
     };
 
-
-
-
-    // $(document).ready(function () {
-    //     updateTimesheetHeaders(); // Ensure headers are updated when the page loads
-    // });
-
-    // function updateTimesheetHeaders() {
-    //     // Calculate weekStart inside the function
-    //     let weekStart = timesheetApp.currentDate.clone().startOf('isoWeek');
-
-    //     for (let i = 0; i < 7; i++) {
-    //         let day = weekStart.clone().add(i, 'days');
-    //         let dateStr = day.format('YYYY-MM-DD');
-    //         let isWeekend = is_weekend(day);
-    //         let isHoliday = holidays && holidays.hasOwnProperty(dateStr) && !isWeekend;
-
-    //         let $header = $('.timesheet-grid th').eq(i + 1);
-
-    //         console.log(`Day: ${dateStr}, Holiday: ${isHoliday}, Weekend: ${isWeekend} , Leave : ${leaves[dateStr]}`);
-
-    //         if ($header.length) {
-    //             $header.html(`
-    //                 <div class="day-header ${isWeekend ? 'weekend' : ''} ${isHoliday ? 'holiday' : ''}">
-    //                 ${day.format('ddd')} ${isHoliday ? '☂️' : ''}
-    //                 <div class="text-muted small">${day.format('MMM DD')}</div>
-    //                 </div>
-    //             `);
-    //         } else {
-    //             console.error("Header not found for index:", i + 1);
-    //         }
-    //     }
-    // }
     function updateTimesheetHeaders() {
         let weekStart = timesheetApp.currentDate.clone().startOf('isoWeek');
 
@@ -405,7 +416,7 @@ async function initializeTimesheet(page, content, initialDate) {
     const generateEntryRow = (entry) => {
         const rowId = `row_${Date.now()}`;
         let holidayHoursSet = {};
-    
+
         // Track which holidays already have hours set
         $('#timesheet-entries tr').not('.add-row-container').each(function () {
             $(this).find('.day-hours[data-is-holiday="true"]').each(function () {
@@ -415,7 +426,7 @@ async function initializeTimesheet(page, content, initialDate) {
                 }
             });
         });
-    
+
         return `
             <tr data-date="${entry.date}" data-task="${entry.task}" data-row-id="${rowId}">
                 <td>
@@ -431,18 +442,18 @@ async function initializeTimesheet(page, content, initialDate) {
                 ${Array.from({ length: 7 }, (_, i) => {
             let dayDate = moment(entry.date).clone().startOf('isoWeek').add(i, 'days');
             let dateStr = dayDate.format('YYYY-MM-DD');
-    
+
             let isDayHoliday = holidays && holidays.hasOwnProperty(dateStr) && !is_weekend(dayDate);
             let isDayLeave = leaves && leaves.hasOwnProperty(dateStr) ? leaves[dateStr] : null;
             let isWeekend = is_weekend(dayDate);
-    
+
             let comment = isDayHoliday ? holidays[dateStr] :
                 isDayLeave ? `${isDayLeave.type || "N/A"}` :
                     isWeekend ? "Week Off" : "";
-    
+
             // Initialize hours to 0
             let hours = null;
-    
+
             // Only set hours if there are existing entries
             if (entry.entries && entry.entries[dateStr]) {
                 hours = entry.entries[dateStr].hours || null;
@@ -450,9 +461,9 @@ async function initializeTimesheet(page, content, initialDate) {
                 hours = 8;
                 holidayHoursSet[dateStr] = true;
             }
-    
+
             comment = entry.entries?.[dateStr]?.comment || comment;
-    
+
             // Add icons for holidays and leaves in the header
             $(document).ready(function () {
                 let $header = $('.timesheet-grid th').eq(i + 1);
@@ -478,14 +489,14 @@ async function initializeTimesheet(page, content, initialDate) {
                     `);
                 }
             });
-    
+
             return `
                         <td class="${isDayHoliday || isDayLeave || isWeekend ? 'weekend' : ''}">
                             <div class="day-cell">
                                 ${isDayHoliday || isDayLeave || isWeekend ? `
                                     <div class="text-muted text-center holiday-text">
                                         ${comment}
-                                        ${isDayLeave && isDayLeave.type ?  `` : ''}
+                                        ${isDayLeave && isDayLeave.type ? `` : ''}
                                     </div>
                                     <input type="hidden"
                                         class="form-control text-center day-hours"
@@ -618,26 +629,36 @@ async function initializeTimesheet(page, content, initialDate) {
     };
 
     // Add this CSS to your existing styles
-    $('<style>').prop('type', 'text/css')
+    $('<style>')
+        .prop('type', 'text/css')
         .html(`
-            .task-input-container {
-                display: flex;
-                align-items: center;
-            }
-            .task-input-container .edit-task {
-                padding: 2px 6px;
-                color: var(--text-muted);
-            }
-            .task-input-container input[readonly] {
-                background: transparent !important;
-                border-color: transparent !important;
-                cursor: default;
-            }
-            [data-theme="dark"] .task-input-container .edit-task {
-                color: var(--gray-400);
-            }
-        `)
+        /* Task Input Container */
+        .task-input-container {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Edit Task Button */
+        .task-input-container .edit-task {
+            padding: 2px 6px;
+            color: var(--text-muted);
+            transition: color 0.3s ease-in-out;
+        }
+
+        /* Readonly Task Input */
+        .task-input-container input[readonly] {
+            background: transparent !important;
+            border-color: transparent !important;
+            cursor: default;
+        }
+
+        /* Dark Mode Adjustments */
+        [data-theme="dark"] .task-input-container .edit-task {
+            color: var(--gray-400);
+        }
+    `)
         .appendTo('head');
+
 
     // Add new helper function definition for appendAddRowButton
     const appendAddRowButton = ($tbody) => {
@@ -856,7 +877,6 @@ async function initializeTimesheet(page, content, initialDate) {
 
                                     // Hide other action buttons only for the submitted timesheet
                                     $(`.btn-save[data-week="${weekStart}"]`).hide();
-                                    $(`.add-row[data-week="${weekStart}"], .delete-row[data-week="${weekStart}"]`).hide();
                                     $(`.btn-primary[data-week="${weekStart}"]`).hide();
 
                                     // Save the submitted state
@@ -883,24 +903,23 @@ async function initializeTimesheet(page, content, initialDate) {
 
 
     const makeTimesheetReadonly = () => {
-        // Disable all inputs and make them readonly
-        $('.timesheet-grid input, .timesheet-grid select').prop('readonly', true).prop('disabled', true);
+        // Disable all inputs and selects
+        $('.timesheet-grid input').prop('readonly', true);
+        $('.timesheet-grid select').prop('disabled', true);
         $('.timesheet-grid .task-input-container input').prop('disabled', true);
 
         // Hide action buttons
-        $('.btn-save, .add-row, .delete-row').hide();
-        $('.btn-primary').hide();
+        $('.btn-save, .add-row, .delete-row, .btn-submit').hide();
 
         // Convert comment inputs to text display when readonly
         $('.comment-input').each(function () {
             const comment = $(this).val();
-            if (comment) {
-                const $display = $(`
+            if (comment && !$(this).next('.comment-display').length) {
+                $(this).after(`
                     <div class="comment-display text-muted small">
                         ${frappe.utils.escape_html(comment)}
                     </div>
                 `);
-                $(this).after($display);
                 $(this).hide();
             }
         });
@@ -909,14 +928,16 @@ async function initializeTimesheet(page, content, initialDate) {
         $('.timesheet-grid').addClass('readonly');
 
         // Add readonly styles if not already added
-        if (!$('#readonly-styles').length) {
-            $('<style id="readonly-styles">')
-                .prop('type', 'text/css')
-                .html(`
+        if (!document.getElementById('readonly-styles')) {
+            $('head').append(`
+                <style id="readonly-styles">
                     .timesheet-grid.readonly {
                         opacity: 0.9;
                     }
-                    .timesheet-grid.readonly input,
+                    .timesheet-grid.readonly input {
+                        background-color: var(--gray-50) !important;
+                        cursor: not-allowed;
+                    }
                     .timesheet-grid.readonly select {
                         background-color: var(--gray-50) !important;
                         cursor: not-allowed;
@@ -934,10 +955,11 @@ async function initializeTimesheet(page, content, initialDate) {
                     [data-theme="dark"] .comment-display {
                         background-color: var(--gray-800);
                     }
-                `)
-                .appendTo('head');
+                </style>
+            `);
         }
     };
+
 
     // Add new cancel timesheet function
     const cancelTimesheet = () => {
@@ -1014,82 +1036,6 @@ async function initializeTimesheet(page, content, initialDate) {
         }
     };
 
-    // Modify fetchAndPopulateTimesheet to include leave data
-    // const fetchAndPopulateTimesheet = async () => {
-    //     try {
-    //         if (!employeeInfo) {
-    //             await fetchEmployeeInfo();
-    //         }
-
-    //         let weekStart = timesheetApp.currentDate.clone().startOf('isoWeek');
-    //         let weekEnd = timesheetApp.currentDate.clone().endOf('isoWeek');
-
-    //         console.log("Fetching leaves for:", employeeInfo.name);
-    //         console.log("Date range:", weekStart.format('YYYY-MM-DD'), "to", weekEnd.format('YYYY-MM-DD'));
-
-    //         // First fetch leaves
-    //         const leaveResponse = await frappe.call({
-    //             method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.get_employee_leaves',
-    //             args: {
-    //                 employee: employeeInfo.name,
-    //                 start_date: weekStart.format('YYYY-MM-DD'),
-    //                 end_date: weekEnd.format('YYYY-MM-DD')
-    //             }
-    //         });
-
-    //         // Process leaves first with better debugging
-    //         leaves = {};
-    //         if (leaveResponse.message) {
-    //             console.log("Leave response:", leaveResponse.message);
-    //             leaveResponse.message.forEach(leave => {
-    //                 leaves[leave.leave_date] = {
-    //                     type: leave.leave_type,
-    //                     status: leave.status
-    //                 };
-    //                 console.log(`Processed leave for date ${leave.leave_date}:`, leaves[leave.leave_date]);
-    //             });
-    //         }
-
-    //         // Then fetch holidays
-    //         const holidayResponse = await frappe.call({
-    //             method: "frappe.client.get_list",
-    //             args: {
-    //                 doctype: "Holiday",
-    //                 parent: "Holiday List",
-    //                 filters: [
-    //                     ["holiday_date", "between", [
-    //                         weekStart.format('YYYY-MM-DD'),
-    //                         weekEnd.format('YYYY-MM-DD')
-    //                     ]]
-    //                 ],
-    //                 fields: ["holiday_date", "description"]
-    //             }
-    //         });
-
-    //         // Process holidays
-    //         holidays = {};
-    //         if (holidayResponse.message) {
-    //             holidayResponse.message.forEach(holiday => {
-    //                 holidays[holiday.holiday_date] = holiday.description;
-    //             });
-    //         }
-
-    //         console.log('Leaves object:', leaves);
-    //         console.log('Holidays object:', holidays);
-
-    //         // Update headers with both holiday and leave information
-    //         updateTimesheetHeaders();
-
-    //         // Then fetch timesheet data
-    //         await loadTimesheetData();
-    //     } catch (error) {
-    //         console.error('Error in fetchAndPopulateTimesheet:', error);
-    //         frappe.show_alert({
-    //             message: __('Error loading timesheet data. Please refresh the page.'),
-    //             indicator: 'red'
-    //         });
-    //     }
-    // };
     const fetchAndPopulateTimesheet = async () => {
         try {
             // Ensure employeeInfo is loaded before making API calls
@@ -1624,65 +1570,91 @@ async function initializeTimesheet(page, content, initialDate) {
     $('<style>')
         .prop('type', 'text/css')
         .html(`
-            /* Status indicator styles */
-            .timesheet-status {
-                padding: 15px;
-                border-radius: 4px;
-                background: var(--gray-50);
-            }
-            .status-indicators {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                max-width: 600px;
-                margin: 0 auto;
-            }
-            .indicator-item {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                position: relative;
-            }
-            .indicator-circle {
-                width: 20px;
-                height: 20px;
-                border-radius: 50%;
-                background: var(--gray-400);
-                margin-bottom: 8px;
-            }
-            .indicator-circle.active {
-                background: var(--blue-500);
-                box-shadow: 0 0 0 4px rgba(var(--blue-500-rgb), 0.2);
-            }
-            .indicator-label {
-                font-size: 12px;
-                color: var(--gray-600);
-            }
-            .indicator-separator {
-                flex-grow: 1;
-                height: 2px;
-                background: var(--gray-300);
-                margin: 0 10px;
-                margin-bottom: 25px;
-            }
-            /* Status-specific colors */
-            .indicator-circle.draft.active { background: var(--blue-500); }
-            .indicator-circle.saved.active { background: var(--green-500); }
-            .indicator-circle.submitted.active { background: var(--yellow-500); }
-            .indicator-circle.approved.active { background: var(--green-600); }
+        /* Timesheet Status Container */
+        .timesheet-status {
+            padding: 15px;
+            border-radius: 4px;
+            background: var(--gray-50);
+        }
 
-            /* Dark mode support */
-            [data-theme="dark"] .timesheet-status {
-                background: var(--gray-800);
-            }
-            [data-theme="dark"] .indicator-label {
-                color: var(--gray-400);
-            }
-            [data-theme="dark"] .indicator-separator {
-                background: var(--gray-700);
-            }
-        `)
+        /* Status Indicator Layout */
+        .status-indicators {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* Individual Status Indicator */
+        .indicator-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Status Indicator Circle */
+        .indicator-circle {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--gray-400);
+            margin-bottom: 8px;
+            transition: background 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+
+        /* Active Status Indicator */
+        .indicator-circle.active {
+            background: var(--blue-500);
+            box-shadow: 0 0 0 4px rgba(var(--blue-500-rgb), 0.2);
+        }
+
+        /* Status Label */
+        .indicator-label {
+            font-size: 12px;
+            color: var(--gray-600);
+            text-align: center;
+        }
+
+        /* Separator Line Between Indicators */
+        .indicator-separator {
+            flex-grow: 1;
+            height: 2px;
+            background: var(--gray-300);
+            margin: 0 10px;
+            margin-bottom: 25px;
+            transition: background 0.3s ease-in-out;
+        }
+
+        /* Status-Specific Colors */
+        .indicator-circle.draft.active {
+            background: var(--red-500);
+        }
+        .indicator-circle.saved.active {
+            background: var(--blue-500);
+        }
+        .indicator-circle.submitted.active {
+            background: var(--yellow-500);
+        }
+        .indicator-circle.approved.active {
+            background: var(--green-600);
+        }
+
+        /* Dark Mode Styles */
+        [data-theme="dark"] .timesheet-status {
+            background: var(--gray-800);
+        }
+        [data-theme="dark"] .indicator-label {
+            color: var(--gray-400);
+        }
+        [data-theme="dark"] .indicator-separator {
+            background: var(--gray-700);
+        }
+    `)
         .appendTo('head');
+
 
     // Update the status indicators based on timesheet state
     const updateStatusIndicators = (status) => {
@@ -1708,9 +1680,6 @@ async function initializeTimesheet(page, content, initialDate) {
     updateStatusIndicators('Draft');
 }
 
-const hideActionButtons = () => {
-    $('.btn-save, .btn-primary, .btn-danger, .add-row, .delete-row').hide();
-};
 
 const isManager = (employeeId) => {
     return frappe.call({
@@ -1723,8 +1692,6 @@ const isManager = (employeeId) => {
         }
     });
 };
-
-// Replace the existing delete row event handler with this new one
 
 
 
