@@ -4,13 +4,22 @@
     margin: 0;
     box-sizing: border-box;
 }
+.table-bordered {
+    border: 2px solid black !important;
+}
+
+.table-bordered th,
+.table-bordered td {
+    border: 2px solid black !important;
+}
+
 [data-theme="light"] {
     --bg-color: #c1e5f5;
     --fg-color: white;
     --navbar-bg: #226b92;
     --card-bg: var(--fg-color);
-    --border-color: rgba(34, 107, 146, 0.2);
-    --input-border: rgba(34, 107, 146, 0.3);
+    /* --border-color: rgba(34, 107, 146, 0.2); */
+    /* --input-border: rgba(34, 107, 146, 0.3); */
     
     /* Core theme variables */
     --subtle-accent: #e8f4f8;
