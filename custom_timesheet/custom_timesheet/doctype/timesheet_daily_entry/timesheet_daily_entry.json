@@ -1,6 +1,6 @@
 {
  "actions": [],
- "creation": "2024-02-05 10:36:38.460751",
+ "creation": "2024-03-07 10:00:00.000000",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -8,6 +8,10 @@
   "task",
   "hours",
   "description",
+  "is_leave",
+  "leave_type",
+  "is_half_day",
+  "is_holiday",
   "weekday"
  ],
  "fields": [
@@ -15,7 +19,8 @@
    "fieldname": "date",
    "fieldtype": "Date",
    "in_list_view": 1,
-   "label": "Date"
+   "label": "Date",
+   "reqd": 1
   },
   {
    "fetch_if_empty": 1,
@@ -23,7 +28,8 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Task",
-   "options": "Task"
+   "options": "Task",
+   "reqd": 1
   },
   {
    "default": "0",
@@ -39,6 +45,32 @@
    "label": "Description"
   },
   {
+   "default": "0",
+   "fieldname": "is_leave",
+   "fieldtype": "Check",
+   "label": "Is Leave"
+  },
+  {
+   "depends_on": "is_leave",
+   "fieldname": "leave_type",
+   "fieldtype": "Link",
+   "label": "Leave Type",
+   "options": "Leave Type"
+  },
+  {
+   "default": "0",
+   "depends_on": "is_leave",
+   "fieldname": "is_half_day",
+   "fieldtype": "Check",
+   "label": "Is Half Day"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_holiday",
+   "fieldtype": "Check",
+   "label": "Is Holiday"
+  },
+  {
    "fieldname": "weekday",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -48,7 +80,7 @@
  ],
  "istable": 1,
  "links": [],
- "modified": "2025-02-23 22:30:31.635602",
+ "modified": "2024-03-07 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Custom Timesheet",
  "name": "Timesheet Daily Entry",

@@ -413,7 +413,15 @@ async function initializeTimesheet(page, content, initialDate) {
     } else {
         updateTimesheetHeaders();
     }
-    const generateEntryRow = (entry) => {
+    const generateEntryRow = (entry = {}) => {
+        // Ensure entry has default values to prevent null errors
+        entry = {
+            date: entry.date || moment().format('YYYY-MM-DD'),
+            task: entry.task || '',
+            entries: entry.entries || {},
+            ...entry
+        };
+
         const rowId = `row_${Date.now()}`;
         let holidayHoursSet = {};
 
@@ -679,6 +687,13 @@ async function initializeTimesheet(page, content, initialDate) {
     const renderBasicStructure = () => {
         let weekStart = timesheetApp.currentDate.clone().startOf('isoWeek');
         let weekEnd = timesheetApp.currentDate.clone().endOf('isoWeek');
+
+        // Ensure date values are valid before rendering
+        if (!weekStart.isValid() || !weekEnd.isValid()) {
+            console.error("Invalid date values");
+            weekStart = moment().startOf('isoWeek');
+            weekEnd = moment().endOf('isoWeek');
+        }
 
         // Update date range display
         $('.date-range').text(`${weekStart.format('MMM DD')} - ${weekEnd.format('MMM DD, YYYY')}`);
@@ -1119,6 +1134,11 @@ async function initializeTimesheet(page, content, initialDate) {
     };
 
     const loadTimesheetData = () => {
+        if (!employeeInfo || !employeeInfo.name) {
+            console.error("Employee info not loaded");
+            return;
+        }
+
         let weekStart = timesheetApp.currentDate.clone().startOf('isoWeek').format('YYYY-MM-DD');
 
         // Reset state first

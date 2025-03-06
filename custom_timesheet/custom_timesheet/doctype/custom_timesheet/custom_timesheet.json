@@ -13,17 +13,14 @@
         "week_start",
         "week_end",
         "daily_entries",
+        "is_leave",
+        "leave_type",
+        "half_day",
+        "is_holiday",
         "total_hours",
         "amended_from"
     ],
     "fields": [
-        {
-            "fieldname": "is_holiday",
-            "fieldtype": "Check",
-            "label": "Is Holiday",
-            "default": 0,
-            "hidden": 1
-        },
         {
             "fieldname": "employee",
             "fieldtype": "Link",
@@ -32,6 +29,32 @@
             "reqd": 1,
             "ignore_user_permissions": 1,
             "in_standard_filter": 1
+        },
+        {
+            "fieldname": "is_leave",
+            "fieldtype": "Check",
+            "label": "Is Leave",
+            "default": 0
+        },
+        {
+            "fieldname": "leave_type",
+            "fieldtype": "Link",
+            "label": "Leave Type",
+            "options": "Leave Type",
+            "depends_on": "is_leave"
+        },
+        {
+            "fieldname": "half_day",
+            "fieldtype": "Check",
+            "label": "Half Day",
+            "default": 0,
+            "depends_on": "is_leave"
+        },
+        {
+            "fieldname": "is_holiday",
+            "fieldtype": "Check",
+            "label": "Is Holiday",
+            "default": 0
         },
         {
             "fetch_from": "employee.employee_name",
