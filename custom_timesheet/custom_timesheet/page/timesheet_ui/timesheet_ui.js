@@ -923,8 +923,9 @@ async function initializeTimesheet(page, content, initialDate) {
         $('.timesheet-grid select').prop('disabled', true);
         $('.timesheet-grid .task-input-container input').prop('disabled', true);
 
-        // Hide action buttons
+        // Hide all action buttons including delete buttons
         $('.btn-save, .add-row, .delete-row, .btn-submit').hide();
+        $('.delete-row').remove(); // Remove delete buttons completely
 
         // Convert comment inputs to text display when readonly
         $('.comment-input').each(function () {
@@ -975,6 +976,10 @@ async function initializeTimesheet(page, content, initialDate) {
         }
     };
 
+    const hideActionButtons = () => {
+        $('.btn-save, .add-row, .delete-row, .btn-submit').hide();
+        $('.delete-row').remove(); // Remove delete buttons completely
+    };
 
     // Add new cancel timesheet function
     const cancelTimesheet = () => {
@@ -1188,6 +1193,7 @@ async function initializeTimesheet(page, content, initialDate) {
                 // Make all fields readonly if submitted or approved
                 if (r.message.timesheet.docstatus === 1 || r.message.timesheet.status === 'Approved') {
                     makeTimesheetReadonly();
+                    hideActionButtons();
                 }
 
                 // Group entries by task and date for easier lookup
