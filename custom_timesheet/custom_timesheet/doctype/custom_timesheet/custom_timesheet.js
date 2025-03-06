@@ -1,6 +1,3 @@
-// Copyright (c) 2025, kishore and contributors
-// For license information, please see license.txt
-
 frappe.ui.form.on('Custom Timesheet', {
     refresh: function(frm) {
         // Ensure status is always Saved for non-submitted docs
