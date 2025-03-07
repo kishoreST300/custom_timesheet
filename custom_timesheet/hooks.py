@@ -14,7 +14,7 @@ doc_events = {
 
 app_include_css = [
     "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css",
-    "/assets/custom_timesheet/css/timeSheet.css?v=3.9",
+    "/assets/custom_timesheet/css/timeSheet.css?v=4.0",
 ]
 
 # DocTypes to be registered

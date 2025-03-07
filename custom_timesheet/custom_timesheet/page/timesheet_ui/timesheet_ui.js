@@ -926,7 +926,6 @@ async function initializeTimesheet(page, content, initialDate) {
         // Hide all action buttons including delete buttons
         $('.btn-save, .add-row, .delete-row, .btn-submit').hide();
         $('.delete-row').remove(); // Remove delete buttons completely
-
         // Convert comment inputs to text display when readonly
         $('.comment-input').each(function () {
             const comment = $(this).val();

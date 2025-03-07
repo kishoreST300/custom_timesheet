@@ -1326,3 +1326,76 @@ def get_employee_leaves(employee, start_date, end_date):
 
 
 # ...rest of existing code...
+
+
+@frappe.whitelist()
+def get_holidays_for_week(week_start, week_end):
+    """Get holidays and leaves for the selected week"""
+    try:
+        # Get employee details
+        employee = get_employee_from_user(frappe.session.user)
+        if not employee:
+            return {
+                "status": "error",
+                "message": "Employee not found"
+            }
+
+        # Get holiday list for employee
+        holiday_list = frappe.db.get_value('Employee', employee, 'holiday_list')
+        if not holiday_list:
+            return {"holidays": {}, "leaves": {}}
+
+        # Fetch holidays
+        holidays = frappe.get_all(
+            'Holiday',
+            filters={
+                'parent': holiday_list,
+                'holiday_date': ['between', [week_start, week_end]]
+            },
+            fields=['holiday_date', 'description']
+        )
+
+        # Fetch leaves
+        leaves = frappe.get_all(
+            'Leave Application',
+            filters={
+                'employee': employee,
+                'status': 'Approved',
+                'from_date': ['<=', week_end],
+                'to_date': ['>=', week_start]
+            },
+            fields=['from_date', 'to_date', 'leave_type']
+        )
+
+        # Format holidays
+        holiday_dict = {}
+        for holiday in holidays:
+            holiday_dict[str(holiday.holiday_date)] = holiday.description
+
+        # Format leaves
+        leave_dict = {}
+        for leave in leaves:
+            current_date = leave.from_date
+            while current_date <= leave.to_date:
+                leave_dict[str(current_date)] = {
+                    "type": leave.leave_type,
+                    "status": "Approved"
+                }
+                current_date = add_days(current_date, 1)
+
+        return {
+            "status": "success",
+            "holidays": holiday_dict,
+            "leaves": leave_dict
+        }
+
+    except Exception as e:
+        frappe.log_error(f"Error in get_holidays_for_week: {str(e)}")
+        return {
+            "status": "error",
+            "message": "Error fetching holidays and leaves",
+            "holidays": {},
+            "leaves": {}
+        }
+
+# ...rest of existing code...

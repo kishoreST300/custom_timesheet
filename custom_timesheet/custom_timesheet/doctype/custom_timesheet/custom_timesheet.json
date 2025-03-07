@@ -31,32 +31,6 @@
             "in_standard_filter": 1
         },
         {
-            "fieldname": "is_leave",
-            "fieldtype": "Check",
-            "label": "Is Leave",
-            "default": 0
-        },
-        {
-            "fieldname": "leave_type",
-            "fieldtype": "Link",
-            "label": "Leave Type",
-            "options": "Leave Type",
-            "depends_on": "is_leave"
-        },
-        {
-            "fieldname": "half_day",
-            "fieldtype": "Check",
-            "label": "Half Day",
-            "default": 0,
-            "depends_on": "is_leave"
-        },
-        {
-            "fieldname": "is_holiday",
-            "fieldtype": "Check",
-            "label": "Is Holiday",
-            "default": 0
-        },
-        {
             "fetch_from": "employee.employee_name",
             "fieldname": "employee_name",
             "fieldtype": "Data",
@@ -100,6 +74,32 @@
             "fieldtype": "Table",
             "label": "Daily Entries",
             "options": "Timesheet Daily Entry"
+        },
+        {
+            "fieldname": "is_leave",
+            "fieldtype": "Check",
+            "label": "Is Leave",
+            "default": 0
+        },
+        {
+            "fieldname": "leave_type",
+            "fieldtype": "Link",
+            "label": "Leave Type",
+            "options": "Leave Type",
+            "depends_on": "is_leave"
+        },
+        {
+            "fieldname": "half_day",
+            "fieldtype": "Check",
+            "label": "Half Day",
+            "default": 0,
+            "depends_on": "is_leave"
+        },
+        {
+            "fieldname": "is_holiday",
+            "fieldtype": "Check",
+            "label": "Is Holiday",
+            "default": 0
         },
         {
             "fieldname": "total_hours",
