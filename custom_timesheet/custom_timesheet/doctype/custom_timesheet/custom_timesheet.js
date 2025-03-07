@@ -74,98 +74,97 @@ frappe.ui.form.on('Custom Timesheet', {
             }
         });
 
-        // Add cancel button for submitted documents
-        if (frm.doc.docstatus === 1) {
-            frm.add_custom_button(__('Cancel'), function() {
-                frappe.confirm(
-                    __('Are you sure you want to cancel this timesheet?'),
-                    function() {
-                        frappe.call({
-                            method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.cancel_timesheet',
-                            args: {
-                                timesheet_name: frm.doc.name
-                            },
-                            callback: function(r) {
-                                if (r.message && r.message.status === "success") {
-                                    frappe.show_alert({
-                                        message: __('Timesheet cancelled successfully'),
-                                        indicator: 'green'
-                                    });
-                                    frm.reload_doc();
-                                } else {
-                                    frappe.msgprint(__('Failed to cancel timesheet'));
-                                }
-                            }
-                        });
-                    }
-                );
-            });
-        
-            // ✅ Select the button and apply red color
-            setTimeout(() => {
-                $(".btn:contains('Cancel')").removeClass('btn-default').addClass('btn btn-danger');
-            }, 200);
-        }
-        
-        
-        
-        // Replace the existing approval logic with this
-        if (frm.doc.docstatus === 1 && frm.doc.status === "Submitted") {
-            frappe.call({
-                method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.check_manager_permission',
-                args: { 
-                    employee: frm.doc.employee 
-                },
-                callback: function(r) {
-                    if (r.message && r.message.is_manager) {
-                        // Remove previous Approve button (if any)
-                        frm.clear_custom_buttons();
-        
-                        // ✅ Add the "Approve" button
-                        frm.add_custom_button(__('Approve'), function() {
-                            frappe.prompt([
-                                {
-                                    label: 'Approval Comment',
-                                    fieldname: 'comment',
-                                    fieldtype: 'Small Text',
-                                    reqd: 1
-                                }
-                            ], function(values) {
+        // Check if user is manager before showing action buttons
+        frappe.call({
+            method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.check_manager_permission',
+            args: { 
+                employee: frm.doc.employee 
+            },
+            callback: function(r) {
+                let isManager = r.message && r.message.is_manager;
+
+                // Remove existing buttons first
+                frm.remove_custom_button('Cancel', 'Actions');
+                frm.remove_custom_button('Approve');
+                
+                // Only proceed if user is manager
+                if (!isManager) {
+                    return;
+                }
+
+                // Only show cancel button for managers
+                if(frm.doc.docstatus === 1) {
+                    frm.add_custom_button(__('Cancel'), function() {
+                        frappe.confirm(
+                            __('Are you sure you want to cancel this timesheet?'),
+                            function() {
                                 frappe.call({
-                                    method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.approve_timesheet',
+                                    method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.cancel_timesheet',
                                     args: {
-                                        timesheet_name: frm.doc.name,
-                                        comment: values.comment
+                                        timesheet_name: frm.doc.name
                                     },
-                                    freeze: true,
-                                    freeze_message: __('Approving Timesheet...'),
                                     callback: function(r) {
                                         if (r.message && r.message.status === "success") {
-                                            frm.reload_doc();
                                             frappe.show_alert({
-                                                message: __("Timesheet approved successfully"),
+                                                message: __('Timesheet cancelled successfully'),
                                                 indicator: 'green'
                                             });
-                                        } else {
-                                            frappe.msgprint(r.message.message || __('An error occurred while approving.'));
+                                            frm.reload_doc();
                                         }
                                     }
                                 });
-                            }, __('Approve Timesheet'), __('Submit'));
-                        });
-        
-                        // ✅ Force apply the green button using jQuery
-                        setTimeout(() => {
-                            $(".btn:contains('Approve')").removeClass('btn-default').addClass('btn-success');
-                        }, 200);
-                    }
+                            }
+                        );
+                    }, __('Actions'));
+                
+                    // Apply red color to cancel button
+                    setTimeout(() => {
+                        $(".btn:contains('Cancel')").removeClass('btn-default').addClass('btn btn-danger');
+                    }, 100);
                 }
-            });
-        }
-        
-        
-        
-        
+
+                // Only show approve button for managers
+                if (frm.doc.docstatus === 1 && frm.doc.status === "Submitted") {
+                    frm.add_custom_button(__('Approve'), function() {
+                        frappe.prompt([
+                            {
+                                label: 'Approval Comment',
+                                fieldname: 'comment',
+                                fieldtype: 'Small Text',
+                                reqd: 1
+                            }
+                        ], function(values) {
+                            frappe.call({
+                                method: 'custom_timesheet.custom_timesheet.doctype.custom_timesheet.custom_timesheet.approve_timesheet',
+                                args: {
+                                    timesheet_name: frm.doc.name,
+                                    comment: values.comment
+                                },
+                                freeze: true,
+                                freeze_message: __('Approving Timesheet...'),
+                                callback: function(r) {
+                                    if (r.message && r.message.status === "success") {
+                                        frm.reload_doc();
+                                        frappe.show_alert({
+                                            message: __("Timesheet approved successfully"),
+                                            indicator: 'green'
+                                        });
+                                    } else {
+                                        frappe.msgprint(r.message.message || __('An error occurred while approving.'));
+                                    }
+                                }
+                            });
+                        }, __('Approve Timesheet'), __('Submit'));
+                    });
+
+                    // Apply green color to approve button
+                    setTimeout(() => {
+                        $(".btn:contains('Approve')").removeClass('btn-default').addClass('btn-success');
+                    }, 200);
+                }
+            }
+        });
+
         // Remove approve button if already approved
         if (frm.doc.status === "Approved" || frm.doc.workflow_state === "Approved") {
             frm.page.clear_secondary_action();
@@ -495,35 +494,40 @@ frappe.ui.form.on('Custom Timesheet', {
 function render_timesheet_grid(frm) {
     let weekStart = moment(frm.doc.week_start);
     let weekDays = [];
-    let displayedHolidays = new Set(); // Track which holidays have been shown
-    let displayedLeaves = new Set();   // Track which leaves have been shown
-    
+    let specialDays = new Map(); // Track special days (holidays, leaves, weekends)
+
     // Generate array of dates for the week
-    for(let i = 0; i < 7; i++) {
+    for (let i = 0; i < 7; i++) {
         let day = weekStart.clone().add(i, 'days');
         weekDays.push(day);
     }
 
     const isWeekend = (date) => moment(date).day() % 6 === 0;
-    const isHoliday = (date) => frm.holidays[date.format('YYYY-MM-DD')];
-    const isLeave = (date) => frm.leaves[date.format('YYYY-MM-DD')];
+    const isHoliday = (dateStr) => frm.holidays && frm.holidays[dateStr];
+    const isLeave = (dateStr) => frm.leaves && frm.leaves[dateStr];
 
     let columns = weekDays.map(date => {
         let dateStr = date.format('YYYY-MM-DD');
         let weekend = isWeekend(date);
-        let holiday = isHoliday(date);
-        let leave = isLeave(date);
-        
+        let holiday = isHoliday(dateStr);
+        let leave = isLeave(dateStr);
+
+        if (!specialDays.has(dateStr) && (weekend || holiday || leave)) {
+            specialDays.set(dateStr, {
+                type: weekend ? 'weekend' : holiday ? 'holiday' : 'leave',
+                description: weekend ? 'Week-off' :
+                            holiday ? frm.holidays[dateStr] :
+                            `Leave (${frm.leaves[dateStr].type})`,
+                standardHours: (holiday || leave) ? 8 : 0
+            });
+        }
+
         return {
             date: dateStr,
             day: date.format('ddd'),
             dateDisplay: date.format('MMM DD'),
-            isWeekend: weekend,
-            isHoliday: holiday,
-            isLeave: leave,
-            status: weekend ? 'Week-off' : 
-                    holiday ? frm.holidays[dateStr] :
-                    leave ? `Leave (${frm.leaves[dateStr].type})` : ''
+            isSpecial: specialDays.has(dateStr),
+            specialInfo: specialDays.get(dateStr) || null
         };
     });
 
@@ -547,25 +551,23 @@ function render_timesheet_grid(frm) {
             <table class="table table-bordered">
                 <thead>
                     <tr>
-                        <th style="width: 200px">Task</th>
+                        <th class="task-column">Task</th>
                         ${columns.map(col => `
-                            <th class="text-center ${col.isWeekend ? 'weekend' : ''} 
-                                              ${col.isHoliday ? 'holiday' : ''} 
-                                              ${col.isLeave ? 'leave' : ''}">
+                            <th class="text-center ${col.isSpecial ? col.specialInfo.type : ''}">
                                 ${col.day}<br>
                                 <span class="text-muted">${col.dateDisplay}</span>
-                                ${col.status ? `
+                                ${col.isSpecial ? `
                                     <div class="day-status">
-                                        <span class="badge status-badge">${col.status}</span>
+                                        <span class="badge status-badge">${col.specialInfo.description}</span>
                                     </div>
                                 ` : ''}
                             </th>
                         `).join('')}
-                        <th style="width: 80px">Total</th>
+                        <th class="total-column">Total</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${render_timesheet_rows(taskGroups, columns)}
+                    ${render_timesheet_rows(taskGroups, columns, specialDays)}
                 </tbody>
             </table>
         </div>
@@ -574,24 +576,18 @@ function render_timesheet_grid(frm) {
     $(frm.fields_dict.daily_entries.wrapper).html(`
         <style>
             .timesheet-weekly-view { margin: 15px 0; overflow-x: auto; }
-            .timesheet-weekly-view .weekend { background-color: var(--bg-light-gray); }
+            .timesheet-weekly-view table { width: 100%; border-collapse: collapse; }
+            .timesheet-weekly-view th, .timesheet-weekly-view td { padding: 10px; text-align: center; }
+            .timesheet-weekly-view .task-column { width: 250px; text-align: left; }
+            .timesheet-weekly-view .total-column { width: 100px; }
+            .timesheet-weekly-view .weekend { background-color: #f8f9fa; }
             .timesheet-weekly-view .holiday { background-color: #fff3cd; }
             .timesheet-weekly-view .leave { background-color: #d1ecf1; }
-            .timesheet-weekly-view .table { margin-bottom: 0; }
-            .timesheet-weekly-view th { white-space: nowrap; }
-            .day-status { margin-top: 4px; font-size: 0.8em; }
-            .status-badge {
-                padding: 2px 6px;
-                border-radius: 3px;
-                background-color: var(--gray-500);
-                color: white;
-            }
-            .weekend .status-badge { background-color: var(--gray-600); }
-            .holiday .status-badge { background-color: #ffc107; color: #000; }
-            .leave .status-badge { background-color: #17a2b8; }
-            [data-theme="dark"] .timesheet-weekly-view .weekend { background-color: var(--gray-800); }
-            [data-theme="dark"] .timesheet-weekly-view .holiday { background-color: var(--warning-bg); }
-            [data-theme="dark"] .timesheet-weekly-view .leave { background-color: var(--info-bg); }
+            .timesheet-weekly-view .day-status { margin-top: 4px; font-size: 0.8em; }
+            .status-badge { padding: 2px 6px; border-radius: 3px; color: #333; font-weight: bold; }
+            [data-theme="dark"] .timesheet-weekly-view .weekend { background-color: #2d2d2d; }
+            [data-theme="dark"] .timesheet-weekly-view .holiday { background-color: #ffcc80; }
+            [data-theme="dark"] .timesheet-weekly-view .leave { background-color: #80deea; }
         </style>
         ${tableHtml}
     `);
@@ -599,39 +595,70 @@ function render_timesheet_grid(frm) {
     $(frm.fields_dict.daily_entries.wrapper).find('.grid-container').hide();
 }
 
-function render_timesheet_rows(taskGroups, columns) {
-    // Track holidays and leaves that have been counted
-    let countedSpecialDays = new Set();
+
+
+function render_timesheet_rows(taskGroups, columns, specialDays) {
+    let rowTotals = [];
+    let dayTotals = columns.map(() => 0);
+    let taskCount = Object.keys(taskGroups).length;
+    let leaveAddedPerDay = new Set();
+    let weekendAddedPerDay = new Set();
+    let dailyHourCap = {}; 
 
     let rows = Object.values(taskGroups).map((group, index) => {
         let rowTotal = 0;
-        let cells = columns.map(col => {
+        let cells = columns.map((col, colIndex) => {
             let entry = group.entries[col.date] || {};
-            let hours = 0;
+            let specialDay = specialDays.get(col.date);
 
-            if (!col.isWeekend) {
-                if ((col.isHoliday || col.isLeave) && !countedSpecialDays.has(col.date)) {
-                    hours = 8;
-                    rowTotal += 8;
-                    countedSpecialDays.add(col.date);
-                } else if (!col.isHoliday && !col.isLeave && entry.hours) {
-                    hours = parseFloat(entry.hours);
-                    rowTotal += hours;
-                }
+            if (!dailyHourCap[col.date]) {
+                dailyHourCap[col.date] = 0;
             }
+
+            if (specialDay && specialDay.type === 'weekend' && !weekendAddedPerDay.has(col.date)) {
+                weekendAddedPerDay.add(col.date);
+                return `<td class="text-center weekend">Week-off</td>`;
+            }
+
+            if (specialDay && specialDay.type === 'leave' && !leaveAddedPerDay.has(col.date)) {
+                leaveAddedPerDay.add(col.date);
+                let remainingHours = Math.max(0, 8 - dailyHourCap[col.date]);
+                dailyHourCap[col.date] = 8;
+
+                return `
+                    <td class="text-center leave">
+                        <div class="special-day-cell">
+                            <div class="hours">${remainingHours.toFixed(2)}</div>
+                            <div class="description text-muted small">${specialDay.description}</div>
+                        </div>
+                    </td>
+                `;
+            }
+
+            if (specialDay && (specialDay.type === 'leave' || specialDay.type === 'holiday')) {
+                return ''; 
+            }
+
+            let hours = parseFloat(entry.hours || 0);
+            let remainingHours = Math.max(0, 8 - dailyHourCap[col.date]);
+
+            if (hours > remainingHours) {
+                hours = remainingHours;
+            }
+
+            dailyHourCap[col.date] += hours;
+            rowTotal += hours;
+            dayTotals[colIndex] += hours;
 
             return `
                 <td class="text-center">
-                    ${(!col.isWeekend && !col.isHoliday && !col.isLeave) ? `
-                        <div>${hours || '-'}</div>
-                        ${entry.description ? `
-                            <div class="text-muted small">${entry.description}</div>
-                        ` : ''}
-                    ` : `<div>-</div>`}
+                    <div>${hours || '-'}</div>
+                    ${entry.description ? `<div class="text-muted small">${entry.description}</div>` : ''}
                 </td>
             `;
-        });
+        }).filter(cell => cell !== '');
 
+        rowTotals.push(rowTotal);
         return `
             <tr>
                 <td>${group.task_name || group.task}</td>
@@ -641,37 +668,34 @@ function render_timesheet_rows(taskGroups, columns) {
         `;
     });
 
-    // Reset counted days for totals row
-    countedSpecialDays.clear();
+    let grandTotal = dayTotals.reduce((sum, total) => sum + total, 0);
+    grandTotal = Math.min(grandTotal, 40);
 
-    // Add totals row
     let totalRow = `
         <tr class="font-weight-bold">
             <td>Total</td>
-            ${columns.map(col => {
-                let dayTotal = 0;
-                if (!col.isWeekend) {
-                    if ((col.isHoliday || col.isLeave) && !countedSpecialDays.has(col.date)) {
-                        dayTotal = 8;
-                        countedSpecialDays.add(col.date);
-                    } else if (!col.isHoliday && !col.isLeave) {
-                        dayTotal = Object.values(taskGroups).reduce((sum, group) => 
-                            sum + parseFloat(group.entries[col.date]?.hours || 0), 0);
-                    }
-                }
-                return `<td class="text-center">${dayTotal.toFixed(2)}</td>`;
-            }).join('')}
-            <td class="text-center">
-                ${
-                columns.reduce((total, col) => {
-                    if (col.isWeekend) return total;
-                    if (col.isHoliday || col.isLeave) return total + 8;
-                    return total + Object.values(taskGroups).reduce((sum, group) => 
-                        sum + parseFloat(group.entries[col.date]?.hours || 0), 0);
-                }, 0).toFixed(2)
-            }</td>
+            ${dayTotals.map(total => `<td class="text-center">${total.toFixed(2)}</td>`).join('')}
+            <td class="text-center">${grandTotal.toFixed(2)}</td>
         </tr>
     `;
 
     return rows.join('') + totalRow;
 }
+
+
+// Add these styles to your existing styles
+$('<style>').prop('type', 'text/css').html(`
+    .special-day-cell {
+        padding: 8px;
+        text-align: center;
+    }
+    .special-day-cell .hours {
+        font-weight: bold;
+        margin-bottom: 4px;
+    }
+    .special-day-cell .description {
+        white-space: normal;
+        line-height: 1.2;
+    }
+    /* ...rest of existing styles... */
+`).appendTo('head');
